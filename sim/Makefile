@@ -3,6 +3,7 @@
 
 export BUILDDIR ?= $(CURDIR)/build
 export BUILD_IMAGE_NAME ?= tryspace-lab
+export RUNTIME_NAME ?= tryspace-comp-demo-sim
 export TRYLABDIR ?= $(CURDIR)/../../..
 
 # Commands
@@ -17,10 +18,13 @@ build-sim:
 	$(MAKE) --no-print-directory -C $(BUILDDIR)
 
 clean:
-	rm -rf $(BUILDDIR)
+	docker run --rm -it -v $(CURDIR):$(CURDIR) --name "tryspace_comp_build" -w $(CURDIR) $(BUILD_IMAGE_NAME) rm -rf $(BUILDDIR)
 
 debug:
 	docker run --rm -it -v $(TRYLABDIR):$(TRYLABDIR) --name "tryspace_comp_build" -w $(CURDIR) $(BUILD_IMAGE_NAME) /bin/bash
+
+runtime:
+	$(MAKE) clean build && docker build -t $(RUNTIME_NAME) -f ../support/Dockerfile.runtime .
 
 start:
 	docker run --rm -it -v $(TRYLABDIR):$(TRYLABDIR) --name "tryspace_comp_run" $(BUILD_IMAGE_NAME) ./$(BUILDDIR)/demo_sim
