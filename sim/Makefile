@@ -1,20 +1,19 @@
-# Makefile for TrySpace demonstration component CLI development
+# Makefile for TrySpace demonstration component SIM development
 .PHONY: all build clean debug runtime start stop
 
 export BUILDDIR ?= $(CURDIR)/build
 export BUILD_IMAGE_NAME ?= tryspace-lab
 export TRYLABDIR ?= $(CURDIR)/../../..
-export TGTNAME ?= cpu1
 
 # Commands
 all: build
 
 build:
-	docker run --rm -it -v $(TRYLABDIR):$(TRYLABDIR) --name "tryspace_comp_build" -w $(CURDIR) $(BUILD_IMAGE_NAME) make -j build-comp
+	docker run --rm -it -v $(TRYLABDIR):$(TRYLABDIR) --name "tryspace_comp_build" -w $(CURDIR) $(BUILD_IMAGE_NAME) make -j build-sim
 
-build-comp:
+build-sim:
 	mkdir -p $(BUILDDIR)
-	cd $(BUILDDIR) && cmake .. -DTGTNAME=$(TGTNAME)
+	cd $(BUILDDIR) && cmake ..
 	$(MAKE) --no-print-directory -C $(BUILDDIR)
 
 clean:
@@ -24,7 +23,7 @@ debug:
 	docker run --rm -it -v $(TRYLABDIR):$(TRYLABDIR) --name "tryspace_comp_build" -w $(CURDIR) $(BUILD_IMAGE_NAME) /bin/bash
 
 start:
-	docker run --rm -it -v $(TRYLABDIR):$(TRYLABDIR) --name "tryspace_comp_run" $(BUILD_IMAGE_NAME) ./$(BUILDDIR)/demo_cli
+	docker run --rm -it -v $(TRYLABDIR):$(TRYLABDIR) --name "tryspace_comp_run" $(BUILD_IMAGE_NAME) ./$(BUILDDIR)/demo_sim
 
 stop:
 	docker ps --filter name=tryspace-* --filter status=running -aq | xargs docker stop

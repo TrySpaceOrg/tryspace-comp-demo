@@ -1,0 +1,39 @@
+#ifndef DEMO_SIM_H
+#define DEMO_SIM_H
+
+//#include <stdint.h>
+
+#include "demo_device.h"
+#include "simulith.h"
+
+// Configuration parameters
+#define DEMO_SIM_UART_ID 5
+#define DEMO_SIM_UPDATE_RATE_HZ 10
+
+// Status codes
+#define DEMO_SIM_SUCCESS 0
+#define DEMO_SIM_ERROR  1
+
+// Demo simulator state
+typedef struct 
+{
+    // Communication handles
+    uint8_t uart_port;
+    uint32_t uart_handle;
+    void* time_handle;
+    // Simulator specifics
+    double last_update_time;
+    // Device specifics
+    DEMO_Device_HK_tlm_t hk;
+    DEMO_Device_Data_tlm_t data;
+} demo_sim_state_t;
+
+// Function declarations
+static void send_housekeeping(demo_sim_state_t* state);
+static void send_demo_data(demo_sim_state_t* state);
+static void handle_command(demo_sim_state_t* state, const uint8_t* data, size_t length);
+static void on_tick(uint64_t tick_time_ns);
+int demo_sim_init(demo_sim_state_t* state);
+void demo_sim_cleanup(demo_sim_state_t* state);
+
+#endif /* DEMO_SIM_H */ 

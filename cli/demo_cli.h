@@ -1,5 +1,5 @@
 /*******************************************************************************
-** File: demo_checkout.h
+** File: demo_cli.h
 **
 ** Purpose:
 **   This is the header file for the DEMO checkout.

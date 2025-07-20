@@ -7,10 +7,6 @@
 #include "device_cfg.h"
 #include "hwlib.h"
 
-#ifndef DEMO_CFG
-    #include "demo_platform_cfg.h"
-#endif
-
 /*
 ** Type definitions
 */

@@ -1,5 +1,5 @@
 /*******************************************************************************
-** File: demo_checkout.c
+** File: demo_cli.c
 **
 ** Purpose:
 **   This checkout can be run without cFS and is used to quickly develop and
@@ -10,7 +10,7 @@
 /*
 ** Include Files
 */
-#include "demo_checkout.h"
+#include "demo_cli.h"
 
 /*
 ** Global Variables

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.6.4)
-project (demo_checkout)
+project (demo_cli)
 
 if (NOT DEFINED TGTNAME)
   message(FATAL_ERROR "TGTNAME must be defined on the cmake command line (e.g. \"-DTGTNAME=cpu1\")")
@@ -26,42 +26,50 @@ if(${TGTNAME} STREQUAL cpu1)
   endif()
 endif()
 
-include_directories("./")
-include_directories("../fsw/platform_inc")
-include_directories("../fsw/src")
-include_directories("../shared")
-include_directories("../../../fsw/apps/hwlib/fsw/public_inc")
 
-set(demo_checkout_src
-  demo_checkout.c 
+# Use target_include_directories for demo_cli
+set(demo_cli_includes
+    "./"
+    "../fsw/platform_inc"
+    "../fsw/src"
+    "../shared"
+    "../../../fsw/apps/hwlib/fsw/public_inc"
+)
+
+set(demo_cli_src
+  demo_cli.c 
   ../shared/demo_device.c
 )
 
 # Hardware library switch based on TGTNAME
 if(${TGTNAME} STREQUAL cpu1)
-  include_directories("${SIMULITH_DIR}/include")
-  include_directories("../../../fsw/apps/hwlib/sim/inc")
-  set(demo_checkout_src 
-    ${demo_checkout_src}
+  list(APPEND demo_cli_includes 
+    "${SIMULITH_DIR}/include" 
+    "../../../fsw/apps/hwlib/sim/inc"
+  )
+  set(demo_cli_src 
+    ${demo_cli_src}
     ${SIMULITH_DIR}/src/simulith_uart.c
     ${SIMULITH_DIR}/src/simulith_common.c
-    ../../../../fsw/apps/hwlib/sim/src/libuart.c
+    ../../../fsw/apps/hwlib/sim/src/libuart.c
   )
-  set(demo_checkout_libs
+  set(demo_cli_libs
     ${ZeroMQ_LIBRARIES}
     simulith
   )
 endif()
 if(${TGTNAME} STREQUAL cpu2)
-  set(demo_checkout_src 
-    ${demo_checkout_src}
+  set(demo_cli_src 
+    ${demo_cli_src}
     ../../../fsw/apps/hwlib/fsw/linux/libuart.c
   )
 endif()
 
-add_executable(demo_checkout ${demo_checkout_src})
-target_link_libraries(demo_checkout ${demo_checkout_libs})
+
+add_executable(demo_cli ${demo_cli_src})
+target_include_directories(demo_cli PRIVATE ${demo_cli_includes})
+target_link_libraries(demo_cli ${demo_cli_libs})
 
 if(${TGTNAME} STREQUAL cpu1)
-  set_target_properties(demo_checkout PROPERTIES COMPILE_FLAGS "-g" LINK_FLAGS "-g")
+  set_target_properties(demo_cli PROPERTIES COMPILE_FLAGS "-g" LINK_FLAGS "-g")
 endif()
