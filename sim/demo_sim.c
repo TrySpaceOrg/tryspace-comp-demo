@@ -1,10 +1,6 @@
 #include "demo_sim.h"
 #include "simulith_uart.h"
 
-//#include <stdio.h>
-//#include <string.h>
-//#include <unistd.h>
-
 // Global state pointer for callback access
 static demo_sim_state_t* g_state = NULL;
 
@@ -163,11 +159,11 @@ int demo_sim_init(demo_sim_state_t* state)
     // Set global state pointer
     g_state = state;
 
-    // Wait a bit for the Simulith server to start up
+    // Wait a second for the Simulith server to start up
     sleep(1);
 
     // Initialize Simulith client
-    if (simulith_client_init(PUB_ADDR, REP_ADDR, "demo_sim", INTERVAL_NS) != 0) 
+    if (simulith_client_init(CLIENT_PUB_ADDR, CLIENT_REP_ADDR, "tryspace-comp-demo-sim", INTERVAL_NS) != 0) 
     {
         printf("Failed to initialize Simulith client\n");
         return DEMO_SIM_ERROR;
@@ -184,7 +180,7 @@ int demo_sim_init(demo_sim_state_t* state)
     // Initialize UART port struct for Simulith (server/bind)
     memset(&g_uart_port, 0, sizeof(g_uart_port));
     snprintf(g_uart_port.name, sizeof(g_uart_port.name), "demo_sim_uart");
-    snprintf(g_uart_port.address, sizeof(g_uart_port.address), "tcp://*:6005"); // Use port 6000 or as needed
+    snprintf(g_uart_port.address, sizeof(g_uart_port.address), "tcp://*:%d", SIMULITH_UART_BASE_PORT + DEMO_CFG_HANDLE);
     g_uart_port.is_server = 1; // Always server/bind for the simulator
 
     int uart_result = simulith_uart_init(&g_uart_port);

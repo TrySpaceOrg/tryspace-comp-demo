@@ -193,6 +193,9 @@ int main(int argc, char *argv[])
     DemoUart.baud = DEMO_CFG_BAUDRATE_HZ;
     DemoUart.access_option = uart_access_flag_RDWR;
 
+    OS_printf("Delay for UART initialization...\n");
+    sleep(3);
+
     status = uart_init_port(&DemoUart);
     if (status == OS_SUCCESS)
     {

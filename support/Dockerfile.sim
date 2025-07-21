@@ -5,3 +5,6 @@ COPY ./build /app
 
 # Set working directory
 WORKDIR /app
+
+# Set command to run
+CMD ["/app/demo_sim"]
