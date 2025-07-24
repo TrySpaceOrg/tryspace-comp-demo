@@ -12,8 +12,8 @@
 #define DEMO_CFG_HANDLE      5
 #define DEMO_CFG_BAUDRATE_HZ 115200
 #define DEMO_CFG_MS_TIMEOUT  250
-/* Note: Debug flag disabled (commented out) by default */
-//#define DEMO_CFG_DEBUG
+/* Note: To disable debug prints, comment out the following line */
+#define DEMO_CFG_DEBUG
 #endif
 
 #endif /* _DEMO_DEVICE_CFG_H_ */

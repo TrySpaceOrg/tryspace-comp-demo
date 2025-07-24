@@ -41,20 +41,13 @@ static void send_demo_data(demo_sim_state_t* state)
 
 static void handle_command(demo_sim_state_t* state, const uint8_t* data, size_t length)
 {
-    if (!state || !data || length <= DEMO_DEVICE_CMD_SIZE) 
+    if (!state || !data || length < DEMO_DEVICE_CMD_SIZE) 
     {  // Check for minimum command size
         printf("Invalid command parameters: state=%p, data=%p, length=%zu\n", 
                (void*)state, (const void*)data, length);
         return;
     }
     
-    // Parse command fields from bytes (big-endian/network order)
-    if (length < 9) 
-    {
-        printf("Command too short to parse fields.\n");
-        return;
-    }
-
     uint16_t header  = ((uint16_t) data[0] << 8) | data[1];
     uint16_t cmd_id  = ((uint16_t) data[2] << 8) | data[3];
     uint16_t payload = ((uint16_t) data[4] << 8) | data[5];

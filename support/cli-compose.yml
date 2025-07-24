@@ -1,8 +1,8 @@
 # Start
 #   docker compose -f cli-compose.yml up
 # View specific containers
-#   docker compose -f cli-compose.yml run --rm tryspace-comp-demo-cli
-#   docker compose -f cli-compose.yml run --rm tryspace-comp-demo-sim
+#   docker attach tryspace-comp-demo-cli
+#   docker attach tryspace-comp-demo-sim
 services:
   tryspace-sim:
     image: tryspace-sim:latest
