@@ -3,6 +3,7 @@
 # View specific containers
 #   docker attach tryspace-comp-demo-cli
 #   docker attach tryspace-comp-demo-sim
+#   docker attach tryspace-sim
 services:
   tryspace-sim:
     image: tryspace-sim:latest
@@ -10,6 +11,8 @@ services:
     networks:
       - tryspace-net
     restart: unless-stopped
+    stdin_open: true
+    tty: true
 
   tryspace-comp-demo-sim:
     image: tryspace-comp-demo-sim:latest
