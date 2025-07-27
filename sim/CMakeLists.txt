@@ -20,7 +20,9 @@ cmake_policy(SET CMP0079 NEW)
 add_subdirectory(${SIMULITH_DIR} ${CMAKE_BINARY_DIR}/simulith)
 endif()
 
-# Create the executable
+
+
+# Create the standalone executable
 add_executable(demo_sim
     demo_sim.c
     ../shared/demo_device.c
@@ -29,7 +31,16 @@ add_executable(demo_sim
     ../../../fsw/apps/hwlib/sim/src/libuart.c
 )
 
-# Include directories
+# Create the shared library for dynamic loading by director
+add_library(demo_sim_component SHARED
+    demo_sim.c
+    ../shared/demo_device.c
+    ${SIMULITH_DIR}/src/simulith_uart.c
+    ${SIMULITH_DIR}/src/simulith_common.c
+    ../../../fsw/apps/hwlib/sim/src/libuart.c
+)
+
+# Include directories for both targets
 target_include_directories(demo_sim
     PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
@@ -39,18 +50,45 @@ target_include_directories(demo_sim
     ${ZeroMQ_INCLUDE_DIRS}
 )
 
-# Link against Simulith and ZeroMQ
+target_include_directories(demo_sim_component
+    PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${SIMULITH_DIR}/include
+    ../shared
+    ../../../fsw/apps/hwlib/fsw/public_inc
+    ${ZeroMQ_INCLUDE_DIRS}
+)
+
+# Compile definitions
+target_compile_definitions(demo_sim PRIVATE STANDALONE_MODE)
+# demo_sim_component gets no STANDALONE_MODE definition
+
+# Link against Simulith and ZeroMQ for both targets
 target_link_libraries(demo_sim
     PRIVATE
     simulith
     ${ZeroMQ_LIBRARIES}
 )
 
-# Set C standard
+target_link_libraries(demo_sim_component
+    PRIVATE
+    simulith
+    ${ZeroMQ_LIBRARIES}
+)
+
+# Set C standard for both targets
 set_target_properties(demo_sim PROPERTIES
     C_STANDARD 11
     C_STANDARD_REQUIRED ON
 )
 
-# Add dependency on simulith
+set_target_properties(demo_sim_component PROPERTIES
+    C_STANDARD 11
+    C_STANDARD_REQUIRED ON
+    OUTPUT_NAME "demo_sim"
+    PREFIX ""
+)
+
+# Add dependencies on simulith for both targets
 add_dependencies(demo_sim simulith)
+add_dependencies(demo_sim_component simulith)
