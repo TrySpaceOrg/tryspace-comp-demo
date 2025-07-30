@@ -158,6 +158,12 @@ int32 DEMO_AppInit(void)
    DEMO_AppData.HkTelemetryPkt.DeviceCount      = 0;
    DEMO_AppData.HkTelemetryPkt.DeviceEnabled    = DEMO_DEVICE_DISABLED;
 
+   /* 
+   ** Enable the device by default
+   ** This may not be applicable to all applications, but is included here as an example
+   */
+   DEMO_Enable();
+
     /*
      ** Send an information event that the app has initialized.
      ** This is useful for debugging the loading of individual applications.
