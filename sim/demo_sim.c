@@ -162,7 +162,7 @@ int demo_sim_init(demo_sim_state_t* state)
     sleep(1);
 
     // Initialize Simulith client
-    if (simulith_client_init(CLIENT_PUB_ADDR, CLIENT_REP_ADDR, "tryspace-comp-demo-sim", INTERVAL_NS) != 0) 
+    if (simulith_client_init(LOCAL_PUB_ADDR, LOCAL_REP_ADDR, "tryspace-comp-demo-sim", INTERVAL_NS) != 0) 
     {
         printf("Failed to initialize Simulith client\n");
         return DEMO_SIM_ERROR;
@@ -213,7 +213,7 @@ int demo_sim_init(demo_sim_state_t* state)
     state->data.Chan3 = 0;
     state->last_update_time = simulith_time_get(state->time_handle);
 
-    printf("Sample simulator initialized successfully as UART server on %s\n", g_uart_port.address);
+    printf("Demo simulator initialized successfully as UART server on %s\n", g_uart_port.address);
     printf("Waiting for commands...\n");
     return DEMO_SIM_SUCCESS;
 }
