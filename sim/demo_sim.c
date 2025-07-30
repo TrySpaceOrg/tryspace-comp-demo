@@ -1,6 +1,10 @@
 #include "demo_sim.h"
 #include "simulith_uart.h"
 
+#ifndef STANDALONE_MODE
+#include "simulith_component.h"
+#endif
+
 // Global state pointer for callback access
 static demo_sim_state_t* g_state = NULL;
 
@@ -103,7 +107,7 @@ static void handle_command(demo_sim_state_t* state, const uint8_t* data, size_t 
     state->hk.DeviceCounter++;
 }
 
-static void on_tick(uint64_t tick_time_ns)
+static void demo_sim_on_tick(uint64_t tick_time_ns)
 {
     int bytes;
     uint8_t data[256];
@@ -152,11 +156,13 @@ int demo_sim_init(demo_sim_state_t* state)
     // Set global state pointer
     g_state = state;
 
+#ifdef STANDALONE_MODE
+    // In standalone mode, we initialize our own Simulith client
     // Wait a second for the Simulith server to start up
     sleep(1);
 
     // Initialize Simulith client
-    if (simulith_client_init(CLIENT_PUB_ADDR, CLIENT_REP_ADDR, "tryspace-comp-demo-sim", INTERVAL_NS) != 0) 
+    if (simulith_client_init(LOCAL_PUB_ADDR, LOCAL_REP_ADDR, "tryspace-comp-demo-sim", INTERVAL_NS) != 0) 
     {
         printf("Failed to initialize Simulith client\n");
         return DEMO_SIM_ERROR;
@@ -169,6 +175,7 @@ int demo_sim_init(demo_sim_state_t* state)
         simulith_client_shutdown();
         return DEMO_SIM_ERROR;
     }
+#endif
 
     // Initialize UART port struct for Simulith (server/bind)
     memset(&g_uart_port, 0, sizeof(g_uart_port));
@@ -180,7 +187,9 @@ int demo_sim_init(demo_sim_state_t* state)
     if (uart_result < 0) 
     {
         printf("Failed to initialize Simulith UART server\n");
+#ifdef STANDALONE_MODE
         simulith_client_shutdown();
+#endif
         return DEMO_SIM_ERROR;
     }
 
@@ -190,7 +199,9 @@ int demo_sim_init(demo_sim_state_t* state)
     {
         printf("Failed to initialize time provider\n");
         simulith_uart_close(&g_uart_port);
+#ifdef STANDALONE_MODE
         simulith_client_shutdown();
+#endif
         return DEMO_SIM_ERROR;
     }
 
@@ -202,7 +213,7 @@ int demo_sim_init(demo_sim_state_t* state)
     state->data.Chan3 = 0;
     state->last_update_time = simulith_time_get(state->time_handle);
 
-    printf("Sample simulator initialized successfully as UART server on %s\n", g_uart_port.address);
+    printf("Demo simulator initialized successfully as UART server on %s\n", g_uart_port.address);
     printf("Waiting for commands...\n");
     return DEMO_SIM_SUCCESS;
 }
@@ -219,9 +230,84 @@ void demo_sim_cleanup(demo_sim_state_t* state)
         simulith_time_cleanup(state->time_handle);
         state->time_handle = NULL;
     }
+    
+#ifdef STANDALONE_MODE
     simulith_client_shutdown();
+#endif
 }
 
+// Component interface implementation (used when loaded as shared library)
+#ifndef STANDALONE_MODE
+
+static int demo_sim_component_init(component_state_t** state)
+{
+    demo_sim_state_t* demo_state = malloc(sizeof(demo_sim_state_t));
+    if (!demo_state) {
+        return COMPONENT_ERROR;
+    }
+    
+    int result = demo_sim_init(demo_state);
+    if (result != DEMO_SIM_SUCCESS) {
+        free(demo_state);
+        return COMPONENT_ERROR;
+    }
+    
+    *state = (component_state_t*)demo_state;
+    return COMPONENT_SUCCESS;
+}
+
+static void demo_sim_component_tick(component_state_t* state, uint64_t tick_time_ns)
+{
+    if (!state) return;
+    
+    demo_sim_state_t* demo_state = (demo_sim_state_t*)state;
+    
+    // Set global state for the tick callback
+    demo_sim_state_t* old_state = g_state;
+    g_state = demo_state;
+    
+    // Call the original tick function
+    demo_sim_on_tick(tick_time_ns);
+    
+    // Restore previous state
+    g_state = old_state;
+}
+
+static void demo_sim_component_cleanup(component_state_t* state)
+{
+    if (!state) return;
+    
+    demo_sim_state_t* demo_state = (demo_sim_state_t*)state;
+    demo_sim_cleanup(demo_state);
+    free(demo_state);
+}
+
+static const component_interface_t demo_sim_interface = {
+    .name = "demo_sim",
+    .description = "Demo simulation component for testing",
+    .init = demo_sim_component_init,
+    .tick = demo_sim_component_tick,
+    .cleanup = demo_sim_component_cleanup,
+    .configure = NULL  // Not implemented yet
+};
+
+// Component registration function - exported for dynamic loading
+REGISTER_COMPONENT(demo_sim)
+{
+    return &demo_sim_interface;
+}
+
+// Export the registration function with a standard name for dynamic loading
+__attribute__((visibility("default")))
+const component_interface_t* get_component_interface(void)
+{
+    return &demo_sim_interface;
+}
+
+#endif // !STANDALONE_MODE
+
+// Standalone mode main function
+#ifdef STANDALONE_MODE
 int main(int argc, char* argv[])
 {
     demo_sim_state_t state;
@@ -235,8 +321,9 @@ int main(int argc, char* argv[])
     printf("Sample simulator running. Press Ctrl+C to exit.\n");
     
     // Run the client loop with our tick callback
-    simulith_client_run_loop(on_tick);
+    simulith_client_run_loop(demo_sim_on_tick);
     
     demo_sim_cleanup(&state);
     return 0;
-} 
+}
+#endif // STANDALONE_MODE 
