@@ -1,5 +1,6 @@
 #include "demo_sim.h"
 #include "simulith_uart.h"
+#include <math.h>
 
 #ifndef STANDALONE_MODE
 #include "simulith_component.h"
@@ -107,7 +108,7 @@ static void handle_command(demo_sim_state_t* state, const uint8_t* data, size_t 
     state->hk.DeviceCounter++;
 }
 
-static void demo_sim_on_tick(uint64_t tick_time_ns)
+static void demo_sim_on_tick(uint64_t tick_time_ns, const simulith_42_context_t* context_42)
 {
     int bytes;
     uint8_t data[256];
@@ -120,10 +121,32 @@ static void demo_sim_on_tick(uint64_t tick_time_ns)
     // Update demo data at the specified rate
     if (current_time - g_state->last_update_time >= (1.0 / DEMO_SIM_UPDATE_RATE_HZ)) 
     {
-        // Update simulated data based on command counter
-        g_state->data.Chan1 = (uint16_t)(g_state->hk.DeviceCounter * 1);
-        g_state->data.Chan2 = (uint16_t)(g_state->hk.DeviceCounter * 2);
-        g_state->data.Chan3 = (uint16_t)(g_state->hk.DeviceCounter * 3);
+        // If 42 context is available, populate channels with Sun Vector Body (SVB)
+        if (context_42 && context_42->valid) {
+            // Chan1: SVB X-component (scaled and offset for uint16)
+            // Scale by 10000 and add 32768 offset to handle negative values
+            g_state->data.Chan1 = (uint16_t)((context_42->sun_vector_body[0] * 10000.0) + 32768.0);
+            
+            // Chan2: SVB Y-component (scaled and offset for uint16)
+            g_state->data.Chan2 = (uint16_t)((context_42->sun_vector_body[1] * 10000.0) + 32768.0);
+            
+            // Chan3: SVB Z-component (scaled and offset for uint16)
+            g_state->data.Chan3 = (uint16_t)((context_42->sun_vector_body[2] * 10000.0) + 32768.0);
+            
+            // Optional: Print SVB data for debugging
+            //if (g_state->hk.DeviceCounter % 1000 == 0) { // Print every 1000 cycles
+            //    printf("42 SVB - Time: %.3f, Sun Vector Body: [%.6f, %.6f, %.6f], Channels: [%u, %u, %u]\n",
+            //           context_42->sim_time, 
+            //           context_42->sun_vector_body[0], context_42->sun_vector_body[1], context_42->sun_vector_body[2],
+            //           g_state->data.Chan1, g_state->data.Chan2, g_state->data.Chan3);
+            //}
+        } else {
+            // Fallback: Use command counter if no 42 context available
+            g_state->data.Chan1 = (uint16_t)(g_state->hk.DeviceCounter * 1);
+            g_state->data.Chan2 = (uint16_t)(g_state->hk.DeviceCounter * 2);
+            g_state->data.Chan3 = (uint16_t)(g_state->hk.DeviceCounter * 3);
+        }
+        
         g_state->last_update_time = current_time;
     }
 
@@ -256,7 +279,7 @@ static int demo_sim_component_init(component_state_t** state)
     return COMPONENT_SUCCESS;
 }
 
-static void demo_sim_component_tick(component_state_t* state, uint64_t tick_time_ns)
+static void demo_sim_component_tick(component_state_t* state, uint64_t tick_time_ns, const simulith_42_context_t* context_42)
 {
     if (!state) return;
     
@@ -266,8 +289,8 @@ static void demo_sim_component_tick(component_state_t* state, uint64_t tick_time
     demo_sim_state_t* old_state = g_state;
     g_state = demo_state;
     
-    // Call the original tick function
-    demo_sim_on_tick(tick_time_ns);
+    // Call the original tick function with 42 context
+    demo_sim_on_tick(tick_time_ns, context_42);
     
     // Restore previous state
     g_state = old_state;
@@ -308,6 +331,13 @@ const component_interface_t* get_component_interface(void)
 
 // Standalone mode main function
 #ifdef STANDALONE_MODE
+
+// Wrapper function for standalone mode (no 42 context available)
+static void demo_sim_standalone_tick(uint64_t tick_time_ns)
+{
+    demo_sim_on_tick(tick_time_ns, NULL); // Pass NULL for 42 context in standalone mode
+}
+
 int main(int argc, char* argv[])
 {
     demo_sim_state_t state;
@@ -320,8 +350,8 @@ int main(int argc, char* argv[])
     
     printf("Sample simulator running. Press Ctrl+C to exit.\n");
     
-    // Run the client loop with our tick callback
-    simulith_client_run_loop(demo_sim_on_tick);
+    // Run the client loop with our standalone tick callback
+    simulith_client_run_loop(demo_sim_standalone_tick);
     
     demo_sim_cleanup(&state);
     return 0;

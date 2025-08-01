@@ -5,6 +5,8 @@
 
 #include "demo_device.h"
 #include "simulith.h"
+#include "simulith_42_context.h"
+#include "simulith_42_commands.h"
 
 // Configuration parameters
 #define DEMO_SIM_UART_ID 5
@@ -32,7 +34,7 @@ typedef struct
 static void send_housekeeping(demo_sim_state_t* state);
 static void send_demo_data(demo_sim_state_t* state);
 static void handle_command(demo_sim_state_t* state, const uint8_t* data, size_t length);
-static void demo_sim_on_tick(uint64_t tick_time_ns);
+static void demo_sim_on_tick(uint64_t tick_time_ns, const simulith_42_context_t* context_42);
 int demo_sim_init(demo_sim_state_t* state);
 void demo_sim_cleanup(demo_sim_state_t* state);
 
