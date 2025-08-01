@@ -215,7 +215,7 @@ int32_t DEMO_RequestData(uart_info_t *device, DEMO_Device_Data_tlm_t *data)
                     OS_printf("  Chan1   = 0x%04x, %d  \n", data->Chan1, data->Chan1);
                     OS_printf("  Chan2   = 0x%04x, %d  \n", data->Chan2, data->Chan2);
                     OS_printf("  Chan3   = 0x%04x, %d  \n", data->Chan3, data->Chan3);
-                    OS_printf("  Trailer = 0x%02x%02x  \n", read_data[6], read_data[7]);
+                    OS_printf("  Trailer = 0x%02x%02x  \n", read_data[8], read_data[9]);
                 #endif
             }
         }
