@@ -31,9 +31,7 @@ int32_t DEMO_ReadData(uart_info_t *device, uint8_t *read_data, uint8_t data_leng
         bytes = uart_read_port(device, read_data, bytes_available);
         if (bytes != bytes_available)
         {
-            #ifdef DEMO_CFG_DEBUG
-                OS_printf("  DEMO_ReadData: Bytes read != to requested! \n");
-            #endif
+            OS_printf("  DEMO_ReadData: Bytes read != to requested! \n");
             status = OS_ERROR;
         } /* uart_read */
     }
@@ -109,10 +107,10 @@ int32_t DEMO_CommandDevice(uart_info_t *device, uint16_t cmd_code, uint16_t payl
                 OS_printf("DEMO_CommandDevice - uart_write_port returned %d, expected %d \n", bytes, DEMO_DEVICE_CMD_SIZE);
             #endif
         } /* uart_write */
-    }     /* uart_flush*/
+    } /* uart_flush*/
     else
     {
-        OS_printf("DEMO_CommandDevice - uart_flush returned %d \n", status);
+        OS_printf("DEMO_CommandDevice - uart_flush returned error %d \n", status);
     }
     return status;
 }
@@ -159,18 +157,14 @@ int32_t DEMO_RequestHK(uart_info_t *device, DEMO_Device_HK_tlm_t *data)
             }
             else
             {
-                #ifdef DEMO_CFG_DEBUG
-                    OS_printf("  DEMO_RequestHK: DEMO_ReadData reported error %d \n", status);
-                #endif
+                OS_printf("  DEMO_RequestHK: DEMO_ReadData reported error %d \n", status);
                 status = OS_ERROR;
             }
         } /* DEMO_ReadData */
     }
     else
     {
-        #ifdef DEMO_CFG_DEBUG
-            OS_printf("  DEMO_RequestHK: DEMO_CommandDevice reported error %d \n", status);
-        #endif
+        OS_printf("  DEMO_RequestHK: DEMO_CommandDevice reported error %d \n", status);
     }
     return status;
 }
@@ -221,17 +215,13 @@ int32_t DEMO_RequestData(uart_info_t *device, DEMO_Device_Data_tlm_t *data)
         }
         else
         {
-            #ifdef DEMO_CFG_DEBUG
-                OS_printf("  DEMO_RequestData: Invalid data read! \n");
-            #endif
+            OS_printf("  DEMO_RequestData: Invalid data read! \n");
             status = OS_ERROR;
         } /* DEMO_ReadData */
     }
     else
     {
-        #ifdef DEMO_CFG_DEBUG
-            OS_printf("  DEMO_RequestData: DEMO_CommandDevice reported error %d \n", status);
-        #endif
+        OS_printf("  DEMO_RequestData: DEMO_CommandDevice reported error %d \n", status);
     }
     return status;
 }
