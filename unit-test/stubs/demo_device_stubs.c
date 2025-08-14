@@ -14,7 +14,7 @@ int32_t DEMO_ReadData(uart_info_t *device, uint8_t *read_data, uint8_t data_leng
     return UT_GenStub_GetReturnValue(DEMO_ReadData, int32_t);
 }
 
-int32_t DEMO_CommandDevice(uart_info_t *device, uint8_t cmd, uint32_t payload)
+int32_t DEMO_CommandDevice(uart_info_t *device, uint16_t cmd, uint16_t payload)
 {
     UT_GenStub_SetupReturnBuffer(DEMO_CommandDevice, int32_t);
 

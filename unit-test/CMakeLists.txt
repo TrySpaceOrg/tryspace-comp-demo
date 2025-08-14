@@ -25,10 +25,10 @@ target_include_directories(coverage-demo-internal-stubs PUBLIC $<TARGET_PROPERTY
  
 # Use the UT assert public API, and allow direct
 # inclusion of source files that are normally private
-include_directories(${PROJECT_SOURCE_DIR}/fsw/src)
+include_directories(${PROJECT_SOURCE_DIR}/src)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/inc)
-include_directories(${hwlib_MISSION_DIR}/fsw/public_inc)
-include_directories(${PROJECT_SOURCE_DIR}/../../../../fsw/osal/ut_assert/inc)
+include_directories(${hwlib_MISSION_DIR}/public_inc)
+include_directories(${PROJECT_SOURCE_DIR}/../../fsw/osal/ut_assert/inc)
 
 
 # Add a coverage test executable called "demo-ALL" that 
@@ -45,7 +45,7 @@ add_cfe_coverage_test(demo ALL
 
 add_cfe_coverage_test(demo DEVICE 
     "coveragetest/coveragetest_demo_device.c"
-    "../../shared/demo_device.c"
+    "../shared/demo_device.c"
     "stubs/libuart_stubs.c"
 )
 

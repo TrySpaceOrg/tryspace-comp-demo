@@ -384,10 +384,11 @@ void Test_DEMO_ProcessGroundCommand(void)
     UT_SetDataBuffer(UT_KEY(CFE_MSG_GetMsgId), &TestMsgId, sizeof(TestMsgId), false);
     UT_SetDataBuffer(UT_KEY(CFE_MSG_GetFcnCode), &FcnCode, sizeof(FcnCode), false);
     UT_SetDataBuffer(UT_KEY(CFE_MSG_GetSize), &Size, sizeof(Size), false);
-    UT_CheckEvent_Setup(&EventTest, DEMO_CMD_ENABLE_INF_EID, NULL);
+    UT_CheckEvent_Setup(&EventTest, DEMO_ENABLE_INF_EID, NULL);
     DEMO_ProcessGroundCommand();
-    // UtAssert_True(EventTest.MatchCount == 1, "DEMO_CMD_ENABLE_INF_EID generated (%u)",
+    // UtAssert_True(EventTest.MatchCount == 1, "DEMO_ENABLE_INF_EID generated (%u)",
     //               (unsigned int)EventTest.MatchCount);
+
     /* test failure of command length */
     FcnCode = DEMO_ENABLE_CC;
     Size    = sizeof(TestMsg.Config);
@@ -406,10 +407,11 @@ void Test_DEMO_ProcessGroundCommand(void)
     UT_SetDataBuffer(UT_KEY(CFE_MSG_GetMsgId), &TestMsgId, sizeof(TestMsgId), false);
     UT_SetDataBuffer(UT_KEY(CFE_MSG_GetFcnCode), &FcnCode, sizeof(FcnCode), false);
     UT_SetDataBuffer(UT_KEY(CFE_MSG_GetSize), &Size, sizeof(Size), false);
-    UT_CheckEvent_Setup(&EventTest, DEMO_CMD_DISABLE_INF_EID, NULL);
+    UT_CheckEvent_Setup(&EventTest, DEMO_DISABLE_INF_EID, NULL);
     DEMO_ProcessGroundCommand();
     // UtAssert_True(EventTest.MatchCount == 1, "DEMO_CMD_DISABLE_INF_EID generated (%u)",
     //               (unsigned int)EventTest.MatchCount);
+
     /* test failure of command length */
     FcnCode = DEMO_DISABLE_CC;
     Size    = sizeof(TestMsg.Config);
@@ -435,6 +437,7 @@ void Test_DEMO_ProcessGroundCommand(void)
     DEMO_ProcessGroundCommand();
     // UtAssert_True(EventTest.MatchCount == 1, "DEMO_CMD_CONFIG_INF_EID generated (%u)",
     //               (unsigned int)EventTest.MatchCount);
+
     /* test failure of command length */
     FcnCode = DEMO_CONFIG_CC;
     Size    = sizeof(TestMsg.Reset);
@@ -458,6 +461,7 @@ void Test_DEMO_ProcessGroundCommand(void)
     DEMO_ProcessGroundCommand();
     // UtAssert_True(EventTest.MatchCount == 1, "DEMO_CMD_CONFIG_INF_EID generated (%u)",
     //               (unsigned int)EventTest.MatchCount);
+    
 
     /* test an invalid CC */
     FcnCode = 99;
@@ -562,7 +566,6 @@ void Test_DEMO_ReportDeviceTelemetry(void)
     DEMO_AppData.HkTelemetryPkt.DeviceEnabled = DEMO_DEVICE_DISABLED;
     DEMO_ReportDeviceTelemetry();
 
-    DEMO_AppData.HkTelemetryPkt.DeviceHK.DeviceStatus = 1;
     DEMO_AppData.HkTelemetryPkt.DeviceEnabled         = DEMO_DEVICE_ENABLED;
     DEMO_ReportDeviceTelemetry();
 }
@@ -573,7 +576,7 @@ void Test_DEMO_Configure(void)
 
     DEMO_Config_cmd_t command;
     DEMO_AppData.MsgPtr                                     = (CFE_MSG_Message_t *)&command;
-    ((DEMO_Config_cmd_t *)DEMO_AppData.MsgPtr)->DeviceCfg = 0xFFFFFFFF;
+    ((DEMO_Config_cmd_t *)DEMO_AppData.MsgPtr)->DeviceCfg = 0xFFFF;
     DEMO_Configure();
 
     ((DEMO_Config_cmd_t *)DEMO_AppData.MsgPtr)->DeviceCfg = 0x0;
