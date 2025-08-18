@@ -20,8 +20,6 @@ cmake_policy(SET CMP0079 NEW)
 add_subdirectory(${SIMULITH_DIR} ${CMAKE_BINARY_DIR}/simulith)
 endif()
 
-
-
 # Create the standalone executable
 add_executable(demo_sim
     demo_sim.c
