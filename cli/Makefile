@@ -7,11 +7,16 @@ export RUNTIME_NAME ?= tryspace-comp-demo-cli
 export TRYLABDIR ?= $(CURDIR)/../../..
 export TGTNAME ?= cpu1
 
+# Determine number of parallel jobs to avoid maxing out low-power systems (Raspberry Pi etc.).
+# Use `nproc - 1` but ensure at least 1 job.
+NPROC := $(shell nproc 2>/dev/null || echo 1)
+JOBS := $(shell if [ $(NPROC) -le 1 ]; then echo 1; else expr $(NPROC) - 1; fi)
+
 # Commands
 all: build
 
 build:
-	docker run --rm -it -v $(TRYLABDIR):$(TRYLABDIR) --name $(RUNTIME_NAME) -w $(CURDIR) $(BUILD_IMAGE) make -j build-cli
+	docker run --rm -it -v $(TRYLABDIR):$(TRYLABDIR) --name $(RUNTIME_NAME) -w $(CURDIR) $(BUILD_IMAGE) make -j$(JOBS) build-cli
 
 build-cli:
 	mkdir -p $(BUILDDIR)
