@@ -106,14 +106,13 @@
       </xtce:ContainerSet>
     </xtce:TelemetryMetaData>
   </xtce:SpaceSystem>
-  <xtce:SpaceSystem name="CMD">
-    <xtce:CommandMetaData>
-      <xtce:ArgumentTypeSet>
-        <xtce:IntegerArgumentType name="DEVICE_CONFIG_Type" initialValue="0" shortDescription="Device Configuration" signed="false">
-          <xtce:IntegerDataEncoding sizeInBits="32" encoding="unsigned"/>
-          <xtce:ValidRange minInclusive="0" maxInclusive="4294967295"/>
-        </xtce:IntegerArgumentType>
-      </xtce:ArgumentTypeSet>
+  <xtce:CommandMetaData>
+    <xtce:ArgumentTypeSet>
+      <xtce:IntegerArgumentType name="DEVICE_CONFIG_Type" initialValue="0" shortDescription="Device Configuration" signed="false">
+        <xtce:IntegerDataEncoding sizeInBits="32" encoding="unsigned"/>
+        <xtce:ValidRange minInclusive="0" maxInclusive="4294967295"/>
+      </xtce:IntegerArgumentType>
+    </xtce:ArgumentTypeSet>
       <xtce:MetaCommandSet>
         <xtce:MetaCommand name="DEMO_REQ_DATA">
           <xtce:BaseMetaCommand metaCommandRef="/CCSDS/CCSDS_TC">
@@ -205,5 +204,4 @@
         </xtce:MetaCommand>
       </xtce:MetaCommandSet>
     </xtce:CommandMetaData>
-  </xtce:SpaceSystem>
 </xtce:SpaceSystem>
