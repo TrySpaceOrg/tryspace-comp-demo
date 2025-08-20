@@ -5,6 +5,7 @@
 
 #include "demo_device.h"
 #include "simulith.h"
+#include "simulith_component.h"
 #include "simulith_42_context.h"
 #include "simulith_42_commands.h"
 

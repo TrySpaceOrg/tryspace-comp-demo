@@ -15,7 +15,7 @@
 /*
 ** Global Variables
 */
-uart_info_t              DemoUart;
+uart_info_t            DemoUart;
 DEMO_Device_HK_tlm_t   DemoHK;
 DEMO_Device_Data_tlm_t DemoData;
 
@@ -32,7 +32,7 @@ void print_help(void)
                   "  n                                - ^                               \n"
                   "hk                                 - Request device housekeeping     \n"
                   "  h                                - ^                               \n"
-                  "demo                             - Request demo data             \n"
+                  "demo                               - Request demo data               \n"
                   "  s                                - ^                               \n"
                   "cfg #                              - Send configuration #            \n"
                   "  c #                              - ^                               \n"
