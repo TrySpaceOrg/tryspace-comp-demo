@@ -33,7 +33,7 @@
           <xtce:BaseContainer containerRef="/CCSDS/CCSDS_TM">
             <xtce:RestrictionCriteria>
               <xtce:ComparisonList>
-                <xtce:Comparison parameterRef="/CCSDS/CCSDS_STREAMID" value="2299"/>
+                <xtce:Comparison parameterRef="/CCSDS/CCSDS_STREAMID" value="0x08FB"/>
               </xtce:ComparisonList>
             </xtce:RestrictionCriteria>
           </xtce:BaseContainer>
@@ -98,7 +98,7 @@
           <xtce:BaseContainer containerRef="/CCSDS/CCSDS_TM">
             <xtce:RestrictionCriteria>
               <xtce:ComparisonList>
-                <xtce:Comparison parameterRef="/CCSDS/CCSDS_STREAMID" value="2298"/>
+                <xtce:Comparison parameterRef="/CCSDS/CCSDS_STREAMID" value="0x08FA"/>
               </xtce:ComparisonList>
             </xtce:RestrictionCriteria>
           </xtce:BaseContainer>
@@ -106,19 +106,18 @@
       </xtce:ContainerSet>
     </xtce:TelemetryMetaData>
   </xtce:SpaceSystem>
-  <xtce:SpaceSystem name="CMD">
-    <xtce:CommandMetaData>
-      <xtce:ArgumentTypeSet>
-        <xtce:IntegerArgumentType name="DEVICE_CONFIG_Type" initialValue="0" shortDescription="Device Configuration" signed="false">
-          <xtce:IntegerDataEncoding sizeInBits="32" encoding="unsigned"/>
-          <xtce:ValidRange minInclusive="0" maxInclusive="4294967295"/>
-        </xtce:IntegerArgumentType>
-      </xtce:ArgumentTypeSet>
+  <xtce:CommandMetaData>
+    <xtce:ArgumentTypeSet>
+      <xtce:IntegerArgumentType name="DEVICE_CONFIG_Type" initialValue="0" shortDescription="Device Configuration" signed="false">
+        <xtce:IntegerDataEncoding sizeInBits="32" encoding="unsigned"/>
+        <xtce:ValidRange minInclusive="0" maxInclusive="4294967295"/>
+      </xtce:IntegerArgumentType>
+    </xtce:ArgumentTypeSet>
       <xtce:MetaCommandSet>
         <xtce:MetaCommand name="DEMO_REQ_DATA">
           <xtce:BaseMetaCommand metaCommandRef="/CCSDS/CCSDS_TC">
             <xtce:ArgumentAssignmentList>
-              <xtce:ArgumentAssignment argumentName="CCSDS_STREAMID" argumentValue="6395"/>
+              <xtce:ArgumentAssignment argumentName="CCSDS_STREAMID" argumentValue="0x18FB"/>
               <xtce:ArgumentAssignment argumentName="CCSDS_FC" argumentValue="1"/>
             </xtce:ArgumentAssignmentList>
           </xtce:BaseMetaCommand>
@@ -130,7 +129,7 @@
         <xtce:MetaCommand name="DEMO_REQ_HK">
           <xtce:BaseMetaCommand metaCommandRef="/CCSDS/CCSDS_TC">
             <xtce:ArgumentAssignmentList>
-              <xtce:ArgumentAssignment argumentName="CCSDS_STREAMID" argumentValue="6395"/>
+              <xtce:ArgumentAssignment argumentName="CCSDS_STREAMID" argumentValue="0x18FB"/>
               <xtce:ArgumentAssignment argumentName="CCSDS_FC" argumentValue="0"/>
             </xtce:ArgumentAssignmentList>
           </xtce:BaseMetaCommand>
@@ -142,7 +141,7 @@
         <xtce:MetaCommand name="DEMO_CONFIG_CC">
           <xtce:BaseMetaCommand metaCommandRef="/CCSDS/CCSDS_TC">
             <xtce:ArgumentAssignmentList>
-              <xtce:ArgumentAssignment argumentName="CCSDS_STREAMID" argumentValue="6394"/>
+              <xtce:ArgumentAssignment argumentName="CCSDS_STREAMID" argumentValue="0x18FA"/>
               <xtce:ArgumentAssignment argumentName="CCSDS_FC" argumentValue="4"/>
             </xtce:ArgumentAssignmentList>
           </xtce:BaseMetaCommand>
@@ -158,7 +157,7 @@
         <xtce:MetaCommand name="DEMO_DISABLE_CC">
           <xtce:BaseMetaCommand metaCommandRef="/CCSDS/CCSDS_TC">
             <xtce:ArgumentAssignmentList>
-              <xtce:ArgumentAssignment argumentName="CCSDS_STREAMID" argumentValue="6394"/>
+              <xtce:ArgumentAssignment argumentName="CCSDS_STREAMID" argumentValue="0x18FA"/>
               <xtce:ArgumentAssignment argumentName="CCSDS_FC" argumentValue="3"/>
             </xtce:ArgumentAssignmentList>
           </xtce:BaseMetaCommand>
@@ -170,7 +169,7 @@
         <xtce:MetaCommand name="DEMO_ENABLE_CC">
           <xtce:BaseMetaCommand metaCommandRef="/CCSDS/CCSDS_TC">
             <xtce:ArgumentAssignmentList>
-              <xtce:ArgumentAssignment argumentName="CCSDS_STREAMID" argumentValue="6394"/>
+              <xtce:ArgumentAssignment argumentName="CCSDS_STREAMID" argumentValue="0x18FA"/>
               <xtce:ArgumentAssignment argumentName="CCSDS_FC" argumentValue="2"/>
             </xtce:ArgumentAssignmentList>
           </xtce:BaseMetaCommand>
@@ -182,7 +181,7 @@
         <xtce:MetaCommand name="DEMO_RST_COUNTERS_CC">
           <xtce:BaseMetaCommand metaCommandRef="/CCSDS/CCSDS_TC">
             <xtce:ArgumentAssignmentList>
-              <xtce:ArgumentAssignment argumentName="CCSDS_STREAMID" argumentValue="6394"/>
+              <xtce:ArgumentAssignment argumentName="CCSDS_STREAMID" argumentValue="0x18FA"/>
               <xtce:ArgumentAssignment argumentName="CCSDS_FC" argumentValue="1"/>
             </xtce:ArgumentAssignmentList>
           </xtce:BaseMetaCommand>
@@ -194,7 +193,7 @@
         <xtce:MetaCommand name="DEMO_NOOP_CC">
           <xtce:BaseMetaCommand metaCommandRef="/CCSDS/CCSDS_TC">
             <xtce:ArgumentAssignmentList>
-              <xtce:ArgumentAssignment argumentName="CCSDS_STREAMID" argumentValue="6394"/>
+              <xtce:ArgumentAssignment argumentName="CCSDS_STREAMID" argumentValue="0x18FA"/>
               <xtce:ArgumentAssignment argumentName="CCSDS_FC" argumentValue="0"/>
             </xtce:ArgumentAssignmentList>
           </xtce:BaseMetaCommand>
@@ -205,5 +204,4 @@
         </xtce:MetaCommand>
       </xtce:MetaCommandSet>
     </xtce:CommandMetaData>
-  </xtce:SpaceSystem>
 </xtce:SpaceSystem>

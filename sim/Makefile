@@ -1,9 +1,9 @@
-# Makefile for TrySpace demonstration component SIM development
-.PHONY: all build clean debug runtime start stop
+# Makefile for TrySpace demo component SIM development
+.PHONY: all build build-fsw clean debug
 
 export BUILDDIR ?= $(CURDIR)/build
 export BUILD_IMAGE ?= tryspaceorg/tryspace-lab:0.0.0
-export RUNTIME_NAME ?= tryspace-comp-demo-sim
+export RUNTIME_NAME ?= tryspace-comp-eps-sim
 export TRYLABDIR ?= $(CURDIR)/../../..
 
 # Determine number of parallel jobs to avoid maxing out low-power systems (Raspberry Pi etc.).
@@ -27,12 +27,3 @@ clean:
 
 debug:
 	docker run --rm -it -v $(TRYLABDIR):$(TRYLABDIR) --name $(RUNTIME_NAME) -w $(CURDIR) --user $(shell id -u):$(shell id -g) $(BUILD_IMAGE) /bin/bash
-
-runtime:
-	$(MAKE) clean build && docker build -t $(RUNTIME_NAME) -f ../support/Dockerfile.sim .
-
-start:
-	docker run --rm -it -v $(TRYLABDIR):$(TRYLABDIR) --name "tryspace_comp_run" $(BUILD_IMAGE) ./$(BUILDDIR)/demo_sim
-
-stop:
-	docker ps --filter name=tryspace-* | xargs docker stop

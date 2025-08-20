@@ -2,12 +2,12 @@
 This repository demonstrates a component in the TrySpace environment.
 
 ## Overview
-This repository includes a command line interface (CLI), flight software (FSW), ground software (GSW), and simulation (SIM) directories.
+Command line interface (CLI), flight software (FSW), ground software (GSW), and simulation (SIM) directories are included in this repository.
 
 The demo component is a UART device that is speak when spoken to.
-Each command that is successfully interpretted is echoed back.
+Each command that is successfully interpreted is echoed back.
 If additional telemetry is to be generated, it will follow.
-The specific command format is followed:
+The specific command format is as follows:
 * uint16, header, 0xC0FF
 * uint16, command
   * (0) No operation
@@ -33,25 +33,26 @@ Response formats:
 
 ### Command Line Interface
 The CLI can be configured to connect to either the hardware or simulation.
-This enables direct checkouts these without interferance.
+This enables direct checkouts these without interference.
 
 ### Flight Software
 The core Flight System (cFS) flight software application receives commands from the software bus.
 Two message IDs exist for commands:
-* 0x1A00 - Commands
+* 0x18FA - Commands
   * (0) No operation
   * (1) Reset counters
   * (2) Enable
   * (3) Disable
-* 0x1A01 - Requests
-  * (0) Request telemetry
+* 0x18FB - Requests
+  * (0) Request housekeeping
+  * (1) Request data point
 
 Two message IDs exist for telemetry:
-* 0x0A00 - Application Housekeeping
-* 0x0A01 - Component Telemetry
+* 0x08FA - Application Housekeeping
+* 0x08FB - Component Telemetry
 
 ### Ground Software
-...
+The XTCE file provided details the CCSDS Space Packet Protocol format used for commanding and telemetry.
 
 ### Simulation
-...
+The simulation builds as both a standalone executable that would connect to simulith as the external time driver and as a library for the tryspace-director to load.

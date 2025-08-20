@@ -13,43 +13,38 @@ if(NOT EXISTS "${SIMULITH_DIR}/include/simulith_uart.h")
     message(FATAL_ERROR "Could not find simulith_uart.h in ${SIMULITH_DIR}/include. Please set SIMULITH_DIR to the correct path.")
 endif()
 
-# Only add Simulith subdirectory if not already added
-if(NOT TARGET simulith)
-# Set policy to NEW to allow external project linking
-cmake_policy(SET CMP0079 NEW)
-add_subdirectory(${SIMULITH_DIR} ${CMAKE_BINARY_DIR}/simulith)
+# Prefer a pre-built simulith static library if present in the simulith build dir.
+set(SIMULITH_BUILD_LIB "${SIMULITH_DIR}/build/libsimulith.a")
+if(EXISTS "${SIMULITH_BUILD_LIB}")
+    message(STATUS "Using prebuilt simulith: ${SIMULITH_BUILD_LIB}")
+    add_library(simulith STATIC IMPORTED)
+    set_target_properties(simulith PROPERTIES IMPORTED_LOCATION "${SIMULITH_BUILD_LIB}")
+else()
+    # Only add Simulith subdirectory if not already added
+    if(NOT TARGET simulith)
+        add_subdirectory(${SIMULITH_DIR} ${CMAKE_BINARY_DIR}/simulith)
+    endif()
 endif()
 
-
-
-# Create the standalone executable
-add_executable(demo_sim
-    demo_sim.c
-    ../shared/demo_device.c
-    ${SIMULITH_DIR}/src/simulith_uart.c
+# Determine whether to include simulith source files in component targets.
+if(EXISTS "${SIMULITH_BUILD_LIB}")
+    set(SIMULITH_SRC_FILES "")
+else()
+    set(SIMULITH_SRC_FILES
     ${SIMULITH_DIR}/src/simulith_common.c
-    ../../../fsw/apps/hwlib/sim/src/libuart.c
-)
+    ${SIMULITH_DIR}/src/simulith_uart.c
+    )
+endif()
 
 # Create the shared library for dynamic loading by director
 add_library(demo_sim_component SHARED
     demo_sim.c
     ../shared/demo_device.c
-    ${SIMULITH_DIR}/src/simulith_uart.c
-    ${SIMULITH_DIR}/src/simulith_common.c
     ../../../fsw/apps/hwlib/sim/src/libuart.c
+    ${SIMULITH_SRC_FILES}
 )
 
-# Include directories for both targets
-target_include_directories(demo_sim
-    PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${SIMULITH_DIR}/include
-    ../shared
-    ../../../fsw/apps/hwlib/fsw/public_inc
-    ${ZeroMQ_INCLUDE_DIRS}
-)
-
+# Include directories
 target_include_directories(demo_sim_component
     PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
@@ -59,29 +54,14 @@ target_include_directories(demo_sim_component
     ${ZeroMQ_INCLUDE_DIRS}
 )
 
-# Compile definitions
-target_compile_definitions(demo_sim PRIVATE STANDALONE_MODE)
-# demo_sim_component gets no STANDALONE_MODE definition
-
-# Link against Simulith and ZeroMQ for both targets
-target_link_libraries(demo_sim
-    PRIVATE
-    simulith
-    ${ZeroMQ_LIBRARIES}
-)
-
+# Link against Simulith and ZeroMQ
 target_link_libraries(demo_sim_component
     PRIVATE
     simulith
     ${ZeroMQ_LIBRARIES}
 )
 
-# Set C standard for both targets
-set_target_properties(demo_sim PROPERTIES
-    C_STANDARD 11
-    C_STANDARD_REQUIRED ON
-)
-
+# Set C standard for the component
 set_target_properties(demo_sim_component PROPERTIES
     C_STANDARD 11
     C_STANDARD_REQUIRED ON
@@ -90,5 +70,4 @@ set_target_properties(demo_sim_component PROPERTIES
 )
 
 # Add dependencies on simulith for both targets
-add_dependencies(demo_sim simulith)
 add_dependencies(demo_sim_component simulith)
