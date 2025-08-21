@@ -188,22 +188,13 @@ int demo_sim_init(demo_sim_state_t* state)
         return DEMO_SIM_ERROR;
     }
 
-    // Initialize time provider
-    state->time_handle = simulith_time_init();
-    if (!state->time_handle) 
-    {
-        printf("Failed to initialize time provider\n");
-    simulith_transport_close((transport_port_t*)&g_uart_port);
-        return DEMO_SIM_ERROR;
-    }
-
     // Initialize default values
     state->hk.DeviceCounter = 0;
     state->hk.DeviceConfig = 0;
     state->data.Chan1 = 0;
     state->data.Chan2 = 0;
     state->data.Chan3 = 0;
-    state->last_update_time = simulith_time_get(state->time_handle);
+    state->last_update_time = 0.0;
 
     printf("Demo simulator initialized successfully as UART server on %s\n", g_uart_port.address);
     printf("Waiting for commands...\n");
@@ -216,12 +207,6 @@ void demo_sim_cleanup(demo_sim_state_t* state)
 
     g_state = NULL;  // Clear global state pointer
     simulith_transport_close((transport_port_t*)&g_uart_port);
-
-    if (state->time_handle) 
-    {
-        simulith_time_cleanup(state->time_handle);
-        state->time_handle = NULL;
-    }
 }
 
 // Component interface implementation

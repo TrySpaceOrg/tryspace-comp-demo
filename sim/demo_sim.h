@@ -1,8 +1,6 @@
 #ifndef DEMO_SIM_H
 #define DEMO_SIM_H
 
-//#include <stdint.h>
-
 #include "demo_device.h"
 #include "simulith.h"
 #include "simulith_component.h"
