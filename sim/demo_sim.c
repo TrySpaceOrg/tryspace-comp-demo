@@ -1,6 +1,5 @@
 #include "demo_sim.h"
-#include "simulith_transport.h"
-#include <math.h>
+
 
 // Global state pointer for callback access
 static demo_sim_state_t* g_state = NULL;
@@ -44,7 +43,7 @@ static void handle_command(demo_sim_state_t* state, const uint8_t* data, size_t 
 {
     if (!state || !data || length < DEMO_DEVICE_CMD_SIZE) 
     {  // Check for minimum command size
-        printf("Invalid command parameters: state=%p, data=%p, length=%zu\n", 
+        printf("DEMO SIM: Invalid command parameters: state=%p, data=%p, length=%zu\n", 
                (void*)state, (const void*)data, length);
         return;
     }
@@ -57,46 +56,56 @@ static void handle_command(demo_sim_state_t* state, const uint8_t* data, size_t 
     // Validate header
     if (header != DEMO_DEVICE_HDR) 
     {
-        printf("Invalid command header (0x%04X)\n", header);
+        printf("DEMO SIM: Invalid command header (0x%04X)\n", header);
         return;
     }
 
     // Validate trailer
     if (trailer != DEMO_DEVICE_TRAILER) 
     {
-        printf("Invalid command trailer (0x%04X)\n", trailer);
+        printf("DEMO SIM: Invalid command trailer (0x%04X)\n", trailer);
         return;
     }
 
     // Echo command back
-    printf("handle_command: Echo command back to UART: ID=%d, Payload=0x%08X\n", cmd_id, payload);
+    #ifdef DEMO_CFG_DEBUG
+    printf("DEMO SIM: handle_command: Echo command back to UART: ID=%d, Payload=0x%08X\n", cmd_id, payload);
+    #endif
     simulith_transport_send((transport_port_t*)&g_uart_port, data, length);
 
     // Process command
     switch (cmd_id) 
     {
         case DEMO_DEVICE_NOOP_CMD:
-            printf("Processing NOOP command\n");
+            #ifdef DEMO_CFG_DEBUG
+            printf("DEMO SIM: Processing NOOP command\n");
+            #endif
             // Just echo the command back, which was already done
             break;
 
         case DEMO_DEVICE_REQ_HK_CMD:
-            printf("Processing GET_HK command\n");
+            #ifdef DEMO_CFG_DEBUG
+            printf("DEMO SIM: Processing GET_HK command\n");
+            #endif
             send_housekeeping(state);
             break;
 
         case DEMO_DEVICE_REQ_DATA_CMD:
-            printf("Processing GET_DATA command\n");
+            #ifdef DEMO_CFG_DEBUG
+            printf("DEMO SIM: Processing GET_DATA command\n");
+            #endif
             send_demo_data(state);
             break;
 
         case DEMO_DEVICE_CFG_CMD:
-            printf("Processing SET_CONFIG command with payload 0x%08X\n", payload);
+            #ifdef DEMO_CFG_DEBUG
+            printf("DEMO SIM: Processing SET_CONFIG command with payload 0x%08X\n", payload);
+            #endif
             state->hk.DeviceConfig = payload;
             break;
 
         default:
-            printf("Unknown command ID: %d\n", cmd_id);
+            printf("DEMO SIM: Unknown command ID: %d\n", cmd_id);
             break;
     }
 
@@ -153,12 +162,14 @@ static void demo_sim_on_tick(uint64_t tick_time_ns, const simulith_42_context_t*
         // Read UART
         bytes = simulith_transport_receive((transport_port_t*)&g_uart_port, data, sizeof(data));
 
-        printf("Received %d bytes from UART\n", bytes);
+        #ifdef DEMO_CFG_DEBUG
+        printf("DEMO SIM: Received %d bytes from UART\n", bytes);
         for(int i = 0; i < bytes; i++) 
         {
             printf("%02X ", data[i]);
         }
         printf("\n");
+        #endif
 
         // Process the command
         handle_command(g_state, data, bytes);
@@ -177,14 +188,14 @@ int demo_sim_init(demo_sim_state_t* state)
 
     // Initialize UART port struct for Simulith (server/bind)
     memset(&g_uart_port, 0, sizeof(g_uart_port));
-    snprintf(g_uart_port.name, sizeof(g_uart_port.name), "demo_sim_uart");
+    snprintf(g_uart_port.name, sizeof(g_uart_port.name), "demo_sim_uart%d", DEMO_SIM_UART_ID);
     snprintf(g_uart_port.address, sizeof(g_uart_port.address), "ipc:///tmp/simulith_pub:%d", SIMULITH_UART_BASE_PORT + DEMO_CFG_HANDLE);
     g_uart_port.is_server = 1; // Always server/bind for the simulator
 
     int uart_result = simulith_transport_init((transport_port_t*)&g_uart_port);
     if (uart_result < 0) 
     {
-        printf("Failed to initialize Simulith UART server\n");
+        printf("DEMO SIM: Failed to initialize Simulith UART server\n");
         return DEMO_SIM_ERROR;
     }
 
@@ -196,8 +207,7 @@ int demo_sim_init(demo_sim_state_t* state)
     state->data.Chan3 = 0;
     state->last_update_time = 0.0;
 
-    printf("Demo simulator initialized successfully as UART server on %s\n", g_uart_port.address);
-    printf("Waiting for commands...\n");
+    printf("DEMO SIM: Initialized successfully as %s\n", g_uart_port.name);
     return DEMO_SIM_SUCCESS;
 }
 
@@ -255,11 +265,10 @@ static void demo_sim_component_cleanup(component_state_t* state)
 
 static const component_interface_t demo_sim_interface = {
     .name = "demo_sim",
-    .description = "Demo simulation component for testing",
+    .description = "Demo component simulation with UART interface",
     .init = demo_sim_component_init,
     .tick = demo_sim_component_tick,
-    .cleanup = demo_sim_component_cleanup,
-    .configure = NULL  // Not implemented yet
+    .cleanup = demo_sim_component_cleanup
 };
 
 // Component registration function - exported for dynamic loading
