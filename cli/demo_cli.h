@@ -2,7 +2,7 @@
 ** File: demo_cli.h
 **
 ** Purpose:
-**   This is the header file for the DEMO checkout.
+**   This is the header file for the demo checkout.
 **
 *******************************************************************************/
 #ifndef _DEMO_CHECKOUT_H_
@@ -28,7 +28,7 @@
 #include "demo_device.h"
 
 #if TGTNAME == cpu1
-#include "simulith_uart.h"
+#include "simulith_transport.h"
 #endif
 
 /*
@@ -44,12 +44,12 @@
 ** Command Defines
 */
 #define CMD_UNKNOWN -1
-#define CMD_HELP    0
-#define CMD_EXIT    1
-#define CMD_NOOP    2
-#define CMD_HK      3
-#define CMD_DEMO  4
-#define CMD_CFG     5
+#define CMD_HELP     0
+#define CMD_EXIT     1
+#define CMD_NOOP     2
+#define CMD_HK       3
+#define CMD_DEMO     4
+#define CMD_CFG      5
 
 /*
 ** Prototypes

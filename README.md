@@ -1,5 +1,5 @@
-# TrySpace Component Demonstration
-This repository demonstrates a component in the TrySpace environment.
+# TrySpace Component Demo
+This repository is an example demo component in the TrySpace environment.
 
 ## Overview
 Command line interface (CLI), flight software (FSW), ground software (GSW), and simulation (SIM) directories are included in this repository.
@@ -43,6 +43,7 @@ Two message IDs exist for commands:
   * (1) Reset counters
   * (2) Enable
   * (3) Disable
+  * (4) Set configuration
 * 0x18FB - Requests
   * (0) Request housekeeping
   * (1) Request data point
@@ -55,4 +56,6 @@ Two message IDs exist for telemetry:
 The XTCE file provided details the CCSDS Space Packet Protocol format used for commanding and telemetry.
 
 ### Simulation
-The simulation builds as both a standalone executable that would connect to simulith as the external time driver and as a library for the tryspace-director to load.
+The simulation available is built as a library that is loaded by the tryspace-director for use.
+This maintains the state of the simulation and enables communication to the FSW via simulith.
+Similar to the CLI, the `make cfg` call at the top level tryspace-lab is required prior to building.
