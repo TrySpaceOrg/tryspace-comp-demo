@@ -188,7 +188,7 @@ int demo_sim_init(demo_sim_state_t* state)
 
     // Initialize UART port struct for Simulith (server/bind)
     memset(&g_uart_port, 0, sizeof(g_uart_port));
-    snprintf(g_uart_port.name, sizeof(g_uart_port.name), "demo_sim_uart%d", DEMO_SIM_UART_ID);
+    snprintf(g_uart_port.name, sizeof(g_uart_port.name), "demo_sim_uart%d", DEMO_CFG_HANDLE);
     snprintf(g_uart_port.address, sizeof(g_uart_port.address), "ipc:///tmp/simulith_pub:%d", SIMULITH_UART_BASE_PORT + DEMO_CFG_HANDLE);
     g_uart_port.is_server = 1; // Always server/bind for the simulator
 

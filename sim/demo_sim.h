@@ -9,7 +9,6 @@
 #include "simulith_42_commands.h"
 
 // Configuration parameters
-#define DEMO_SIM_UART_ID 5
 #define DEMO_SIM_UPDATE_RATE_HZ 10
 
 // Status codes
