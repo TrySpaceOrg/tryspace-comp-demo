@@ -93,7 +93,7 @@
   <xtce:CommandMetaData>
     <xtce:ArgumentTypeSet>
       <xtce:IntegerArgumentType name="DEVICE_CONFIG_ArgType" shortDescription="Device Configuration (16-bit)" signed="false">
-        <xtce:IntegerDataEncoding sizeInBits="16" encoding="unsigned"/>
+        <xtce:IntegerDataEncoding sizeInBits="16" encoding="unsigned" byteOrder="leastSignificantByteFirst"/>
         <xtce:ValidRange minInclusive="0" maxInclusive="65535"/>
       </xtce:IntegerArgumentType>
     </xtce:ArgumentTypeSet>
