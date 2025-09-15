@@ -28,7 +28,7 @@ int32_t DEMO_ReadData(uart_info_t *device, uint8_t *read_data, uint8_t data_leng
         }
 
         /* Read data */
-        bytes = uart_read_port(device, read_data, bytes_available);
+        bytes = uart_read_port(device, read_data, (uint32_t)bytes_available);
         if (bytes != bytes_available)
         {
             OS_printf("  DEMO_ReadData: Bytes read != to requested! \n");
@@ -57,10 +57,10 @@ int32_t DEMO_CommandDevice(uart_info_t *device, uint16_t cmd_code, uint16_t payl
     /* Prepare command */
     write_data[0] = DEMO_DEVICE_HDR_0;
     write_data[1] = DEMO_DEVICE_HDR_1;
-    write_data[2] = cmd_code >> 8;
-    write_data[3] = cmd_code;
-    write_data[4] = payload >> 8;
-    write_data[5] = payload;
+    write_data[2] = (uint8_t)(cmd_code >> 8);
+    write_data[3] = (uint8_t)(cmd_code & 0xFF);
+    write_data[4] = (uint8_t)(payload >> 8);
+    write_data[5] = (uint8_t)(payload & 0xFF);
     write_data[6] = DEMO_DEVICE_TRAILER_0;
     write_data[7] = DEMO_DEVICE_TRAILER_1;
 
