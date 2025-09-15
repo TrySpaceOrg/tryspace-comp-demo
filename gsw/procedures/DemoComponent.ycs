@@ -3,6 +3,12 @@
   "steps": [
     {
       "type": "command",
+      "name": "/DEMO/DEMO_ENABLE_CC",
+      "extraOptions": [],
+      "arguments": []
+    },
+    {
+      "type": "command",
       "name": "/DEMO/DEMO_REQ_HK",
       "extraOptions": [],
       "arguments": []
@@ -31,7 +37,7 @@
       "type": "verify",
       "condition": [
         {
-          "parameter": "/DEMO/DEMO_HK_TLM/CMD_COUNT",
+          "parameter": "/DEMO/CMD_COUNT",
           "operator": "eq",
           "value": "0"
         }
@@ -53,7 +59,7 @@
       "type": "verify",
       "condition": [
         {
-          "parameter": "/DEMO/DEMO_HK_TLM/CMD_COUNT",
+          "parameter": "/DEMO/CMD_COUNT",
           "operator": "gte",
           "value": "1"
         }
