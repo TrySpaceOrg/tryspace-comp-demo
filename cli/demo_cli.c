@@ -42,7 +42,7 @@ void print_help(void)
 int get_command(const char *str)
 {
     int  status = CMD_UNKNOWN;
-    char lcmd[MAX_INPUT_TOKEN_SIZE];
+    char lcmd[MAX_INPUT_TOKEN_SIZE + 1];
     strncpy(lcmd, str, MAX_INPUT_TOKEN_SIZE);
 
     /* Convert command to lower case */
@@ -95,7 +95,7 @@ int process_command(int cc, int num_tokens, char tokens[MAX_INPUT_TOKENS][MAX_IN
 {
     int32_t  status      = OS_SUCCESS;
     int32_t  exit_status = OS_SUCCESS;
-    uint32_t config;
+    uint16_t config;
 
     /* Process command */
     switch (cc)
@@ -156,7 +156,7 @@ int process_command(int cc, int num_tokens, char tokens[MAX_INPUT_TOKENS][MAX_IN
         case CMD_CFG:
             if (check_number_arguments(num_tokens, 1) == OS_SUCCESS)
             {
-                config = atoi(tokens[0]);
+                config = (uint16_t)atoi(tokens[0]);
                 status = DEMO_CommandDevice(&DemoUart, DEMO_DEVICE_CFG_CMD, config);
                 if (status == OS_SUCCESS)
                 {
@@ -184,7 +184,7 @@ int main(int argc, char *argv[])
     int     num_input_tokens;
     int     cmd;
     char   *token_ptr;
-    uint8_t run_status = OS_SUCCESS;
+    int     run_status = OS_SUCCESS; /* signed to avoid conversion warnings */
 
     /* Initialize UART */
     DemoUart.deviceString = DEMO_CFG_STRING;
@@ -216,7 +216,13 @@ int main(int argc, char *argv[])
 
         /* Read user input */
         printf(PROMPT);
-        fgets(input_buf, MAX_INPUT_BUF, stdin);
+        if (fgets(input_buf, MAX_INPUT_BUF, stdin) == NULL)
+        {
+            /* EOF or error on stdin - exit the loop */
+            OS_printf("End of input or read error, exiting...\n");
+            run_status = OS_ERROR;
+            break;
+        }
 
         /* Tokenize line buffer */
         token_ptr = strtok(input_buf, " \t\n");
@@ -272,7 +278,7 @@ void to_lower(char *str)
     char *ptr = str;
     while (*ptr)
     {
-        *ptr = tolower((unsigned char)*ptr);
+        *ptr = (char) tolower((unsigned char)*ptr);
         ptr++;
     }
     return;

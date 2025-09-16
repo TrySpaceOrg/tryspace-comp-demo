@@ -7,16 +7,20 @@ static demo_sim_state_t* g_state = NULL;
 // Transport port struct for Simulith
 static transport_port_t g_uart_port = {0};
 
+/* Forward prototypes to satisfy -Wmissing-prototypes for REGISTER_COMPONENT export */
+const component_interface_t* get_demo_sim_component_interface(void);
+const component_interface_t* get_component_interface(void);
+
 static void send_housekeeping(demo_sim_state_t* state)
 {
     if (!state) return;
     uint8_t response[8];
     response[0] = DEMO_DEVICE_HDR_0;
     response[1] = DEMO_DEVICE_HDR_1;
-    response[2] = (state->hk.DeviceCounter >> 8) & 0xFF;
-    response[3] = state->hk.DeviceCounter & 0xFF;
-    response[4] = (state->hk.DeviceConfig >> 8) & 0xFF;
-    response[5] = state->hk.DeviceConfig & 0xFF;
+    response[2] = (uint8_t)((state->hk.DeviceCounter >> 8) & 0xFF);
+    response[3] = (uint8_t)(state->hk.DeviceCounter & 0xFF);
+    response[4] = (uint8_t)((state->hk.DeviceConfig >> 8) & 0xFF);
+    response[5] = (uint8_t)(state->hk.DeviceConfig & 0xFF);
     response[6] = DEMO_DEVICE_TRAILER_0;
     response[7] = DEMO_DEVICE_TRAILER_1;
     simulith_transport_send((transport_port_t*)&g_uart_port, response, sizeof(response));
@@ -28,12 +32,12 @@ static void send_demo_data(demo_sim_state_t* state)
     uint8_t response[10];
     response[0] = DEMO_DEVICE_HDR_0;
     response[1] = DEMO_DEVICE_HDR_1;
-    response[2] = (state->data.Chan1 >> 8) & 0xFF;
-    response[3] = state->data.Chan1 & 0xFF;
-    response[4] = (state->data.Chan2 >> 8) & 0xFF;
-    response[5] = state->data.Chan2 & 0xFF;
-    response[6] = (state->data.Chan3 >> 8) & 0xFF;
-    response[7] = state->data.Chan3 & 0xFF;
+    response[2] = (uint8_t)((state->data.Chan1 >> 8) & 0xFF);
+    response[3] = (uint8_t)(state->data.Chan1 & 0xFF);
+    response[4] = (uint8_t)((state->data.Chan2 >> 8) & 0xFF);
+    response[5] = (uint8_t)(state->data.Chan2 & 0xFF);
+    response[6] = (uint8_t)((state->data.Chan3 >> 8) & 0xFF);
+    response[7] = (uint8_t)(state->data.Chan3 & 0xFF);
     response[8] = DEMO_DEVICE_TRAILER_0;
     response[9] = DEMO_DEVICE_TRAILER_1;
     simulith_transport_send((transport_port_t*)&g_uart_port, response, sizeof(response));
@@ -121,7 +125,7 @@ static void demo_sim_on_tick(uint64_t tick_time_ns, const simulith_42_context_t*
     if (!g_state) return;
     
     // Convert nanoseconds to seconds
-    double current_time = tick_time_ns / 1e9;
+    double current_time = (double)tick_time_ns / 1e9;
     
     // Update demo data at the specified rate
     if (current_time - g_state->last_update_time >= (1.0 / DEMO_SIM_UPDATE_RATE_HZ)) 
@@ -172,7 +176,7 @@ static void demo_sim_on_tick(uint64_t tick_time_ns, const simulith_42_context_t*
         #endif
 
         // Process the command
-        handle_command(g_state, data, bytes);
+        handle_command(g_state, data, (size_t)bytes);
     }
 }
 
