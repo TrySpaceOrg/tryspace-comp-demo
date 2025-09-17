@@ -1,6 +1,5 @@
 #include "demo_sim.h"
 
-
 // Global state pointer for callback access
 static demo_sim_state_t* g_state = NULL;
 
@@ -130,8 +129,8 @@ static void demo_sim_on_tick(uint64_t tick_time_ns, const simulith_42_context_t*
     // Update demo data at the specified rate
     if (current_time - g_state->last_update_time >= (1.0 / DEMO_SIM_UPDATE_RATE_HZ)) 
     {
-        // If 42 context is available, populate channels with Sun Vector Body (SVB)
-        if (context_42 && context_42->valid) {
+        // If 42 context is available and random data is not enabled, populate channels with Sun Vector Body (SVB)
+        if ((g_state->rand_data_enabled == 0) && context_42 && context_42->valid) {
             // Chan1: SVB X-component (scaled and offset for uint16)
             // Scale by 10000 and add 32768 offset to handle negative values
             g_state->data.Chan1 = (uint16_t)((context_42->sun_vector_body[0] * 10000.0) + 32768.0);
@@ -150,10 +149,24 @@ static void demo_sim_on_tick(uint64_t tick_time_ns, const simulith_42_context_t*
             //           g_state->data.Chan1, g_state->data.Chan2, g_state->data.Chan3);
             //}
         } else {
-            // Fallback: Use command counter if no 42 context available
-            g_state->data.Chan1 = (uint16_t)(g_state->hk.DeviceCounter * 1);
-            g_state->data.Chan2 = (uint16_t)(g_state->hk.DeviceCounter * 2);
-            g_state->data.Chan3 = (uint16_t)(g_state->hk.DeviceCounter * 3);
+            // Random or default values
+            // When random enabled, fill with pseudo-random 16-bit values
+            if (g_state->rand_data_enabled == 1) {
+                g_state->data.Chan1 = (uint16_t)(rand() & 0xFFFF);
+                g_state->data.Chan2 = (uint16_t)(rand() & 0xFFFF);
+                g_state->data.Chan3 = (uint16_t)(rand() & 0xFFFF);
+            } else {
+                // Fallback: Use command counter if no 42 context available
+                g_state->data.Chan1 = (uint16_t)(g_state->hk.DeviceCounter * 1);
+                g_state->data.Chan2 = (uint16_t)(g_state->hk.DeviceCounter * 2);
+                g_state->data.Chan3 = (uint16_t)(g_state->hk.DeviceCounter * 3);
+            }
+        }
+        
+        // Handle random HK if enabled
+        if (g_state->rand_hk_enabled == 1) {
+            g_state->hk.DeviceConfig = (uint16_t)(rand() & 0xFFFF);
+            g_state->hk.DeviceCounter = (uint16_t)(rand() & 0xFFFF);
         }
         
         g_state->last_update_time = current_time;
@@ -180,12 +193,48 @@ static void demo_sim_on_tick(uint64_t tick_time_ns, const simulith_42_context_t*
     }
 }
 
+static void demo_sim_backdoor(component_state_t* cstate, uint16_t cmd_id, const uint8_t* payload, uint16_t payload_len)
+{
+    demo_sim_state_t* state = (demo_sim_state_t*)cstate;
+    if (!state) return;
+    
+    switch (cmd_id) 
+    {
+        case DEMO_BD_SET_CONFIG:    
+            if (payload_len >= 2) 
+            {
+                uint16_t value = (uint16_t)((payload[0] << 8) | payload[1]);
+                state->hk.DeviceConfig = value;
+                printf("DEMO SIM BACKDOOR: Setting DeviceConfig from backdoor command to 0x%04X\n", 
+                   (payload_len >= 2) ? ((payload[0] << 8) | payload[1]) : 0);
+            }
+            break;
+        
+        case DEMO_BD_RAND_HK:
+            state->rand_hk_enabled = (payload_len >= 1) ? (payload[0] != 0) : true;
+            printf("DEMO SIM BACKDOOR: Setting random HK to %s\n", state->rand_hk_enabled ? "ENABLED" : "DISABLED");
+            break;
+        
+        case DEMO_BD_RAND_DATA:
+            state->rand_data_enabled = (payload_len >= 1) ? (payload[0] != 0) : true;
+            printf("DEMO SIM BACKDOOR: Setting random DATA to %s\n", state->rand_data_enabled ? "ENABLED" : "DISABLED");
+            break;
+        
+        default:
+            break;
+    }
+}
+
 int demo_sim_init(demo_sim_state_t* state)
 {
     if (!state) return DEMO_SIM_ERROR;
 
     // Initialize state
     memset(state, 0, sizeof(demo_sim_state_t));
+    
+    //// Seed PRNG
+    //static int seeded = 0;
+    //if (!seeded) { srand((unsigned int)time(NULL)); seeded = 1; }
 
     // Set global state pointer
     g_state = state;
@@ -210,6 +259,8 @@ int demo_sim_init(demo_sim_state_t* state)
     state->data.Chan2 = 0;
     state->data.Chan3 = 0;
     state->last_update_time = 0.0;
+    state->rand_hk_enabled = 0;
+    state->rand_data_enabled = 0;
 
     printf("DEMO SIM: Initialized successfully as %s\n", g_uart_port.name);
     return DEMO_SIM_SUCCESS;
@@ -272,7 +323,8 @@ static const component_interface_t demo_sim_interface = {
     .description = "Demo component simulation with UART interface",
     .init = demo_sim_component_init,
     .tick = demo_sim_component_tick,
-    .cleanup = demo_sim_component_cleanup
+    .cleanup = demo_sim_component_cleanup,
+    .backdoor = demo_sim_backdoor
 };
 
 // Component registration function - exported for dynamic loading

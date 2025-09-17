@@ -96,6 +96,20 @@
         <xtce:IntegerDataEncoding sizeInBits="16" encoding="unsigned" byteOrder="leastSignificantByteFirst"/>
         <xtce:ValidRange minInclusive="0" maxInclusive="65535"/>
       </xtce:IntegerArgumentType>
+      
+      <!-- Backdoor argument types -->
+      <xtce:IntegerArgumentType name="BACKDOOR_CONFIG_ArgType" shortDescription="Backdoor Configuration Value (16-bit, big-endian)" signed="false">
+        <xtce:IntegerDataEncoding sizeInBits="16" encoding="unsigned" byteOrder="mostSignificantByteFirst"/>
+        <xtce:ValidRange minInclusive="0" maxInclusive="65535"/>
+      </xtce:IntegerArgumentType>
+      
+      <xtce:EnumeratedArgumentType name="BACKDOOR_ENABLE_ArgType" shortDescription="Backdoor Enable/Disable Flag">
+        <xtce:IntegerDataEncoding sizeInBits="8" encoding="unsigned"/>
+        <xtce:EnumerationList>
+          <xtce:Enumeration value="0" label="DISABLE"/>
+          <xtce:Enumeration value="1" label="ENABLE"/>
+        </xtce:EnumerationList>
+      </xtce:EnumeratedArgumentType>
     </xtce:ArgumentTypeSet>
 
     <xtce:MetaCommandSet>
@@ -191,6 +205,103 @@
         <xtce:ArgumentList/>
         <xtce:CommandContainer name="DEMO_DEMO_NOOP_CC_CommandContainer">
           <xtce:EntryList/>
+        </xtce:CommandContainer>
+      </xtce:MetaCommand>
+
+      <!-- Backdoor Commands (raw format for sim-backdoor datalink) -->
+      <xtce:MetaCommand name="BACKDOOR_DEMO_SET_CONFIG" shortDescription="Backdoor: Set Demo Config">
+        <xtce:LongDescription>Directly sets the demo simulator configuration via backdoor interface. This bypasses normal command processing and immediately updates the simulator state.</xtce:LongDescription>
+        <xtce:AncillaryDataSet>
+          <xtce:AncillaryData name="yamcs:stream">tc_backdoor</xtce:AncillaryData>
+        </xtce:AncillaryDataSet>
+        <xtce:ArgumentList>
+          <xtce:Argument name="CONFIG_VALUE" argumentTypeRef="BACKDOOR_CONFIG_ArgType"/>
+        </xtce:ArgumentList>
+        <xtce:CommandContainer name="BACKDOOR_DEMO_SET_CONFIG_Container">
+          <xtce:EntryList>
+            <!-- Magic "BACKDOOR" (8 bytes) -->
+            <xtce:FixedValueEntry name="MAGIC_B" binaryValue="42" sizeInBits="8"/>
+            <xtce:FixedValueEntry name="MAGIC_A" binaryValue="41" sizeInBits="8"/>
+            <xtce:FixedValueEntry name="MAGIC_C" binaryValue="43" sizeInBits="8"/>
+            <xtce:FixedValueEntry name="MAGIC_K" binaryValue="4B" sizeInBits="8"/>
+            <xtce:FixedValueEntry name="MAGIC_D" binaryValue="44" sizeInBits="8"/>
+            <xtce:FixedValueEntry name="MAGIC_O1" binaryValue="4F" sizeInBits="8"/>
+            <xtce:FixedValueEntry name="MAGIC_O2" binaryValue="4F" sizeInBits="8"/>
+            <xtce:FixedValueEntry name="MAGIC_R" binaryValue="52" sizeInBits="8"/>
+            <!-- Target length and name -->
+            <xtce:FixedValueEntry name="TARGET_LEN" binaryValue="08" sizeInBits="8"/>
+            <xtce:FixedValueEntry name="TARGET_NAME" binaryValue="64656D6F5F73696D" sizeInBits="64"/> <!-- "demo_sim" -->
+            <!-- Command ID 0x0001 -->
+            <xtce:FixedValueEntry name="CMD_ID" binaryValue="0001" sizeInBits="16"/>
+            <!-- Payload length 2 bytes -->
+            <xtce:FixedValueEntry name="PAYLOAD_LEN" binaryValue="0002" sizeInBits="16"/>
+            <!-- Config value payload -->
+            <xtce:ArgumentRefEntry argumentRef="CONFIG_VALUE"/>
+          </xtce:EntryList>
+        </xtce:CommandContainer>
+      </xtce:MetaCommand>
+
+      <xtce:MetaCommand name="BACKDOOR_DEMO_RAND_HK" shortDescription="Backdoor: Toggle Random HK">
+        <xtce:LongDescription>Enables or disables random housekeeping data generation in the simulator. When enabled, HK counter values become random instead of sequential.</xtce:LongDescription>
+        <xtce:AncillaryDataSet>
+          <xtce:AncillaryData name="yamcs:stream">tc_backdoor</xtce:AncillaryData>
+        </xtce:AncillaryDataSet>
+        <xtce:ArgumentList>
+          <xtce:Argument name="ENABLE" argumentTypeRef="BACKDOOR_ENABLE_ArgType"/>
+        </xtce:ArgumentList>
+        <xtce:CommandContainer name="BACKDOOR_DEMO_RAND_HK_Container">
+          <xtce:EntryList>
+            <!-- Magic "BACKDOOR" (8 bytes) -->
+            <xtce:FixedValueEntry name="MAGIC_B" binaryValue="42" sizeInBits="8"/>
+            <xtce:FixedValueEntry name="MAGIC_A" binaryValue="41" sizeInBits="8"/>
+            <xtce:FixedValueEntry name="MAGIC_C" binaryValue="43" sizeInBits="8"/>
+            <xtce:FixedValueEntry name="MAGIC_K" binaryValue="4B" sizeInBits="8"/>
+            <xtce:FixedValueEntry name="MAGIC_D" binaryValue="44" sizeInBits="8"/>
+            <xtce:FixedValueEntry name="MAGIC_O1" binaryValue="4F" sizeInBits="8"/>
+            <xtce:FixedValueEntry name="MAGIC_O2" binaryValue="4F" sizeInBits="8"/>
+            <xtce:FixedValueEntry name="MAGIC_R" binaryValue="52" sizeInBits="8"/>
+            <!-- Target length and name -->
+            <xtce:FixedValueEntry name="TARGET_LEN" binaryValue="08" sizeInBits="8"/>
+            <xtce:FixedValueEntry name="TARGET_NAME" binaryValue="64656D6F5F73696D" sizeInBits="64"/> <!-- "demo_sim" -->
+            <!-- Command ID 0x0002 -->
+            <xtce:FixedValueEntry name="CMD_ID" binaryValue="0002" sizeInBits="16"/>
+            <!-- Payload length 1 byte -->
+            <xtce:FixedValueEntry name="PAYLOAD_LEN" binaryValue="0001" sizeInBits="16"/>
+            <!-- Enable/disable flag -->
+            <xtce:ArgumentRefEntry argumentRef="ENABLE"/>
+          </xtce:EntryList>
+        </xtce:CommandContainer>
+      </xtce:MetaCommand>
+
+      <xtce:MetaCommand name="BACKDOOR_DEMO_RAND_DATA" shortDescription="Backdoor: Toggle Random Data">
+        <xtce:LongDescription>Enables or disables random channel data generation in the simulator. When enabled, CHAN1/2/3 become random instead of 42 SVB-derived values.</xtce:LongDescription>
+        <xtce:AncillaryDataSet>
+          <xtce:AncillaryData name="yamcs:stream">tc_backdoor</xtce:AncillaryData>
+        </xtce:AncillaryDataSet>
+        <xtce:ArgumentList>
+          <xtce:Argument name="ENABLE" argumentTypeRef="BACKDOOR_ENABLE_ArgType"/>
+        </xtce:ArgumentList>
+        <xtce:CommandContainer name="BACKDOOR_DEMO_RAND_DATA_Container">
+          <xtce:EntryList>
+            <!-- Magic "BACKDOOR" (8 bytes) -->
+            <xtce:FixedValueEntry name="MAGIC_B" binaryValue="42" sizeInBits="8"/>
+            <xtce:FixedValueEntry name="MAGIC_A" binaryValue="41" sizeInBits="8"/>
+            <xtce:FixedValueEntry name="MAGIC_C" binaryValue="43" sizeInBits="8"/>
+            <xtce:FixedValueEntry name="MAGIC_K" binaryValue="4B" sizeInBits="8"/>
+            <xtce:FixedValueEntry name="MAGIC_D" binaryValue="44" sizeInBits="8"/>
+            <xtce:FixedValueEntry name="MAGIC_O1" binaryValue="4F" sizeInBits="8"/>
+            <xtce:FixedValueEntry name="MAGIC_O2" binaryValue="4F" sizeInBits="8"/>
+            <xtce:FixedValueEntry name="MAGIC_R" binaryValue="52" sizeInBits="8"/>
+            <!-- Target length and name -->
+            <xtce:FixedValueEntry name="TARGET_LEN" binaryValue="08" sizeInBits="8"/>
+            <xtce:FixedValueEntry name="TARGET_NAME" binaryValue="64656D6F5F73696D" sizeInBits="64"/> <!-- "demo_sim" -->
+            <!-- Command ID 0x0003 -->
+            <xtce:FixedValueEntry name="CMD_ID" binaryValue="0003" sizeInBits="16"/>
+            <!-- Payload length 1 byte -->
+            <xtce:FixedValueEntry name="PAYLOAD_LEN" binaryValue="0001" sizeInBits="16"/>
+            <!-- Enable/disable flag -->
+            <xtce:ArgumentRefEntry argumentRef="ENABLE"/>
+          </xtce:EntryList>
         </xtce:CommandContainer>
       </xtce:MetaCommand>
 
