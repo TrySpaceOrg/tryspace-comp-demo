@@ -14,18 +14,23 @@ if(${TGTNAME} STREQUAL cpu1)
   
   # Find Simulith headers
   set(SIMULITH_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../simulith" CACHE PATH "Path to Simulith directory")
-  if(NOT EXISTS "${SIMULITH_DIR}/include/simulith_uart.h")
-      message(FATAL_ERROR "Could not find simulith_uart.h in ${SIMULITH_DIR}/include. Please set SIMULITH_DIR to the correct path.")
+  if(NOT EXISTS "${SIMULITH_DIR}/include/simulith_transport.h")
+      message(FATAL_ERROR "Could not find simulith_transport.h in ${SIMULITH_DIR}/include. Please set SIMULITH_DIR to the correct path.")
   endif()
 
-  # Only add Simulith subdirectory if not already added
-  if(NOT TARGET simulith)
-    # Set policy to NEW to allow external project linking
-    cmake_policy(SET CMP0079 NEW)
-    add_subdirectory(${SIMULITH_DIR} ${CMAKE_BINARY_DIR}/simulith)
+  # Prefer a pre-built simulith static library if present in the simulith build dir.
+  set(SIMULITH_BUILD_LIB "${SIMULITH_DIR}/build/libsimulith.a")
+  if(EXISTS "${SIMULITH_BUILD_LIB}")
+      message(STATUS "Using prebuilt simulith: ${SIMULITH_BUILD_LIB}")
+      add_library(simulith STATIC IMPORTED)
+      set_target_properties(simulith PROPERTIES IMPORTED_LOCATION "${SIMULITH_BUILD_LIB}")
+  else()
+      # Only add Simulith subdirectory if not already added
+      if(NOT TARGET simulith)
+          add_subdirectory(${SIMULITH_DIR} ${CMAKE_BINARY_DIR}/simulith)
+      endif()
   endif()
 endif()
-
 
 # Use target_include_directories for demo_cli
 set(demo_cli_includes
@@ -49,8 +54,8 @@ if(${TGTNAME} STREQUAL cpu1)
   )
   set(demo_cli_src 
     ${demo_cli_src}
-    ${SIMULITH_DIR}/src/simulith_uart.c
     ${SIMULITH_DIR}/src/simulith_common.c
+    ${SIMULITH_DIR}/src/simulith_transport.c
     ../../../fsw/apps/hwlib/sim/src/libuart.c
   )
   set(demo_cli_libs
@@ -64,7 +69,6 @@ if(${TGTNAME} STREQUAL cpu2)
     ../../../fsw/apps/hwlib/fsw/linux/libuart.c
   )
 endif()
-
 
 add_executable(demo_cli ${demo_cli_src})
 target_include_directories(demo_cli PRIVATE ${demo_cli_includes})

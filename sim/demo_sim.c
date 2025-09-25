@@ -1,16 +1,14 @@
 #include "demo_sim.h"
-#include "simulith_uart.h"
-#include <math.h>
-
-#ifndef STANDALONE_MODE
-#include "simulith_component.h"
-#endif
 
 // Global state pointer for callback access
 static demo_sim_state_t* g_state = NULL;
 
-// UART port struct for Simulith
-static uart_port_t g_uart_port = {0};
+// Transport port struct for Simulith
+static transport_port_t g_uart_port = {0};
+
+/* Forward prototypes to satisfy -Wmissing-prototypes for REGISTER_COMPONENT export */
+const component_interface_t* get_demo_sim_component_interface(void);
+const component_interface_t* get_component_interface(void);
 
 static void send_housekeeping(demo_sim_state_t* state)
 {
@@ -18,13 +16,13 @@ static void send_housekeeping(demo_sim_state_t* state)
     uint8_t response[8];
     response[0] = DEMO_DEVICE_HDR_0;
     response[1] = DEMO_DEVICE_HDR_1;
-    response[2] = (state->hk.DeviceCounter >> 8) & 0xFF;
-    response[3] = state->hk.DeviceCounter & 0xFF;
-    response[4] = (state->hk.DeviceConfig >> 8) & 0xFF;
-    response[5] = state->hk.DeviceConfig & 0xFF;
+    response[2] = (uint8_t)((state->hk.DeviceCounter >> 8) & 0xFF);
+    response[3] = (uint8_t)(state->hk.DeviceCounter & 0xFF);
+    response[4] = (uint8_t)((state->hk.DeviceConfig >> 8) & 0xFF);
+    response[5] = (uint8_t)(state->hk.DeviceConfig & 0xFF);
     response[6] = DEMO_DEVICE_TRAILER_0;
     response[7] = DEMO_DEVICE_TRAILER_1;
-    simulith_uart_send(&g_uart_port, response, sizeof(response));
+    simulith_transport_send((transport_port_t*)&g_uart_port, response, sizeof(response));
 }
 
 static void send_demo_data(demo_sim_state_t* state)
@@ -33,22 +31,22 @@ static void send_demo_data(demo_sim_state_t* state)
     uint8_t response[10];
     response[0] = DEMO_DEVICE_HDR_0;
     response[1] = DEMO_DEVICE_HDR_1;
-    response[2] = (state->data.Chan1 >> 8) & 0xFF;
-    response[3] = state->data.Chan1 & 0xFF;
-    response[4] = (state->data.Chan2 >> 8) & 0xFF;
-    response[5] = state->data.Chan2 & 0xFF;
-    response[6] = (state->data.Chan3 >> 8) & 0xFF;
-    response[7] = state->data.Chan3 & 0xFF;
+    response[2] = (uint8_t)((state->data.Chan1 >> 8) & 0xFF);
+    response[3] = (uint8_t)(state->data.Chan1 & 0xFF);
+    response[4] = (uint8_t)((state->data.Chan2 >> 8) & 0xFF);
+    response[5] = (uint8_t)(state->data.Chan2 & 0xFF);
+    response[6] = (uint8_t)((state->data.Chan3 >> 8) & 0xFF);
+    response[7] = (uint8_t)(state->data.Chan3 & 0xFF);
     response[8] = DEMO_DEVICE_TRAILER_0;
     response[9] = DEMO_DEVICE_TRAILER_1;
-    simulith_uart_send(&g_uart_port, response, sizeof(response));
+    simulith_transport_send((transport_port_t*)&g_uart_port, response, sizeof(response));
 }
 
 static void handle_command(demo_sim_state_t* state, const uint8_t* data, size_t length)
 {
     if (!state || !data || length < DEMO_DEVICE_CMD_SIZE) 
     {  // Check for minimum command size
-        printf("Invalid command parameters: state=%p, data=%p, length=%zu\n", 
+        printf("DEMO SIM: Invalid command parameters: state=%p, data=%p, length=%zu\n", 
                (void*)state, (const void*)data, length);
         return;
     }
@@ -61,46 +59,56 @@ static void handle_command(demo_sim_state_t* state, const uint8_t* data, size_t 
     // Validate header
     if (header != DEMO_DEVICE_HDR) 
     {
-        printf("Invalid command header (0x%04X)\n", header);
+        printf("DEMO SIM: Invalid command header (0x%04X)\n", header);
         return;
     }
 
     // Validate trailer
     if (trailer != DEMO_DEVICE_TRAILER) 
     {
-        printf("Invalid command trailer (0x%04X)\n", trailer);
+        printf("DEMO SIM: Invalid command trailer (0x%04X)\n", trailer);
         return;
     }
 
     // Echo command back
-    printf("handle_command: Echo command back to UART: ID=%d, Payload=0x%08X\n", cmd_id, payload);
-    simulith_uart_send(&g_uart_port, data, length);
+    #ifdef DEMO_CFG_DEBUG
+    printf("DEMO SIM: handle_command: Echo command back to UART: ID=%d, Payload=0x%08X\n", cmd_id, payload);
+    #endif
+    simulith_transport_send((transport_port_t*)&g_uart_port, data, length);
 
     // Process command
     switch (cmd_id) 
     {
         case DEMO_DEVICE_NOOP_CMD:
-            printf("Processing NOOP command\n");
+            #ifdef DEMO_CFG_DEBUG
+            printf("DEMO SIM: Processing NOOP command\n");
+            #endif
             // Just echo the command back, which was already done
             break;
 
         case DEMO_DEVICE_REQ_HK_CMD:
-            printf("Processing GET_HK command\n");
+            #ifdef DEMO_CFG_DEBUG
+            printf("DEMO SIM: Processing GET_HK command\n");
+            #endif
             send_housekeeping(state);
             break;
 
         case DEMO_DEVICE_REQ_DATA_CMD:
-            printf("Processing GET_DATA command\n");
+            #ifdef DEMO_CFG_DEBUG
+            printf("DEMO SIM: Processing GET_DATA command\n");
+            #endif
             send_demo_data(state);
             break;
 
         case DEMO_DEVICE_CFG_CMD:
-            printf("Processing SET_CONFIG command with payload 0x%08X\n", payload);
+            #ifdef DEMO_CFG_DEBUG
+            printf("DEMO SIM: Processing SET_CONFIG command with payload 0x%08X\n", payload);
+            #endif
             state->hk.DeviceConfig = payload;
             break;
 
         default:
-            printf("Unknown command ID: %d\n", cmd_id);
+            printf("DEMO SIM: Unknown command ID: %d\n", cmd_id);
             break;
     }
 
@@ -116,13 +124,13 @@ static void demo_sim_on_tick(uint64_t tick_time_ns, const simulith_42_context_t*
     if (!g_state) return;
     
     // Convert nanoseconds to seconds
-    double current_time = tick_time_ns / 1e9;
+    double current_time = (double)tick_time_ns / 1e9;
     
     // Update demo data at the specified rate
     if (current_time - g_state->last_update_time >= (1.0 / DEMO_SIM_UPDATE_RATE_HZ)) 
     {
-        // If 42 context is available, populate channels with Sun Vector Body (SVB)
-        if (context_42 && context_42->valid) {
+        // If 42 context is available and random data is not enabled, populate channels with Sun Vector Body (SVB)
+        if ((g_state->rand_data_enabled == 0) && context_42 && context_42->valid) {
             // Chan1: SVB X-component (scaled and offset for uint16)
             // Scale by 10000 and add 32768 offset to handle negative values
             g_state->data.Chan1 = (uint16_t)((context_42->sun_vector_body[0] * 10000.0) + 32768.0);
@@ -141,31 +149,79 @@ static void demo_sim_on_tick(uint64_t tick_time_ns, const simulith_42_context_t*
             //           g_state->data.Chan1, g_state->data.Chan2, g_state->data.Chan3);
             //}
         } else {
-            // Fallback: Use command counter if no 42 context available
-            g_state->data.Chan1 = (uint16_t)(g_state->hk.DeviceCounter * 1);
-            g_state->data.Chan2 = (uint16_t)(g_state->hk.DeviceCounter * 2);
-            g_state->data.Chan3 = (uint16_t)(g_state->hk.DeviceCounter * 3);
+            // Random or default values
+            // When random enabled, fill with pseudo-random 16-bit values
+            if (g_state->rand_data_enabled == 1) {
+                g_state->data.Chan1 = (uint16_t)(rand() & 0xFFFF);
+                g_state->data.Chan2 = (uint16_t)(rand() & 0xFFFF);
+                g_state->data.Chan3 = (uint16_t)(rand() & 0xFFFF);
+            } else {
+                // Fallback: Use command counter if no 42 context available
+                g_state->data.Chan1 = (uint16_t)(g_state->hk.DeviceCounter * 1);
+                g_state->data.Chan2 = (uint16_t)(g_state->hk.DeviceCounter * 2);
+                g_state->data.Chan3 = (uint16_t)(g_state->hk.DeviceCounter * 3);
+            }
+        }
+        
+        // Handle random HK if enabled
+        if (g_state->rand_hk_enabled == 1) {
+            g_state->hk.DeviceConfig = (uint16_t)(rand() & 0xFFFF);
+            g_state->hk.DeviceCounter = (uint16_t)(rand() & 0xFFFF);
         }
         
         g_state->last_update_time = current_time;
     }
 
     // Process UART
-    bytes = simulith_uart_available(&g_uart_port);
+    bytes = simulith_transport_available((transport_port_t*)&g_uart_port);
     if (bytes > 0)
     {
         // Read UART
-        bytes = simulith_uart_receive(&g_uart_port, data, sizeof(data));
+        bytes = simulith_transport_receive((transport_port_t*)&g_uart_port, data, sizeof(data));
 
-        printf("Received %d bytes from UART\n", bytes);
+        #ifdef DEMO_CFG_DEBUG
+        printf("DEMO SIM: Received %d bytes from UART\n", bytes);
         for(int i = 0; i < bytes; i++) 
         {
             printf("%02X ", data[i]);
         }
         printf("\n");
+        #endif
 
         // Process the command
-        handle_command(g_state, data, bytes);
+        handle_command(g_state, data, (size_t)bytes);
+    }
+}
+
+static void demo_sim_backdoor(component_state_t* cstate, uint16_t cmd_id, const uint8_t* payload, uint16_t payload_len)
+{
+    demo_sim_state_t* state = (demo_sim_state_t*)cstate;
+    if (!state) return;
+    
+    switch (cmd_id) 
+    {
+        case DEMO_BD_SET_CONFIG:    
+            if (payload_len >= 2) 
+            {
+                uint16_t value = (uint16_t)((payload[0] << 8) | payload[1]);
+                state->hk.DeviceConfig = value;
+                printf("DEMO SIM BACKDOOR: Setting DeviceConfig from backdoor command to 0x%04X\n", 
+                   (payload_len >= 2) ? ((payload[0] << 8) | payload[1]) : 0);
+            }
+            break;
+        
+        case DEMO_BD_RAND_HK:
+            state->rand_hk_enabled = (payload_len >= 1) ? (payload[0] != 0) : true;
+            printf("DEMO SIM BACKDOOR: Setting random HK to %s\n", state->rand_hk_enabled ? "ENABLED" : "DISABLED");
+            break;
+        
+        case DEMO_BD_RAND_DATA:
+            state->rand_data_enabled = (payload_len >= 1) ? (payload[0] != 0) : true;
+            printf("DEMO SIM BACKDOOR: Setting random DATA to %s\n", state->rand_data_enabled ? "ENABLED" : "DISABLED");
+            break;
+        
+        default:
+            break;
     }
 }
 
@@ -175,56 +231,24 @@ int demo_sim_init(demo_sim_state_t* state)
 
     // Initialize state
     memset(state, 0, sizeof(demo_sim_state_t));
+    
+    //// Seed PRNG
+    //static int seeded = 0;
+    //if (!seeded) { srand((unsigned int)time(NULL)); seeded = 1; }
 
     // Set global state pointer
     g_state = state;
 
-#ifdef STANDALONE_MODE
-    // In standalone mode, we initialize our own Simulith client
-    // Wait a second for the Simulith server to start up
-    sleep(1);
-
-    // Initialize Simulith client
-    if (simulith_client_init(LOCAL_PUB_ADDR, LOCAL_REP_ADDR, "tryspace-comp-demo-sim", INTERVAL_NS) != 0) 
-    {
-        printf("Failed to initialize Simulith client\n");
-        return DEMO_SIM_ERROR;
-    }
-
-    // Handshake with Simulith server
-    if (simulith_client_handshake() != 0) 
-    {
-        printf("Failed to handshake with Simulith server\n");
-        simulith_client_shutdown();
-        return DEMO_SIM_ERROR;
-    }
-#endif
-
     // Initialize UART port struct for Simulith (server/bind)
     memset(&g_uart_port, 0, sizeof(g_uart_port));
-    snprintf(g_uart_port.name, sizeof(g_uart_port.name), "demo_sim_uart");
-    snprintf(g_uart_port.address, sizeof(g_uart_port.address), "tcp://*:%d", SIMULITH_UART_BASE_PORT + DEMO_CFG_HANDLE);
+    snprintf(g_uart_port.name, sizeof(g_uart_port.name), "demo_sim_uart%d", DEMO_CFG_HANDLE);
+    snprintf(g_uart_port.address, sizeof(g_uart_port.address), "ipc:///tmp/simulith_pub:%d", SIMULITH_UART_BASE_PORT + DEMO_CFG_HANDLE);
     g_uart_port.is_server = 1; // Always server/bind for the simulator
 
-    int uart_result = simulith_uart_init(&g_uart_port);
+    int uart_result = simulith_transport_init((transport_port_t*)&g_uart_port);
     if (uart_result < 0) 
     {
-        printf("Failed to initialize Simulith UART server\n");
-#ifdef STANDALONE_MODE
-        simulith_client_shutdown();
-#endif
-        return DEMO_SIM_ERROR;
-    }
-
-    // Initialize time provider
-    state->time_handle = simulith_time_init();
-    if (!state->time_handle) 
-    {
-        printf("Failed to initialize time provider\n");
-        simulith_uart_close(&g_uart_port);
-#ifdef STANDALONE_MODE
-        simulith_client_shutdown();
-#endif
+        printf("DEMO SIM: Failed to initialize Simulith UART server\n");
         return DEMO_SIM_ERROR;
     }
 
@@ -234,10 +258,11 @@ int demo_sim_init(demo_sim_state_t* state)
     state->data.Chan1 = 0;
     state->data.Chan2 = 0;
     state->data.Chan3 = 0;
-    state->last_update_time = simulith_time_get(state->time_handle);
+    state->last_update_time = 0.0;
+    state->rand_hk_enabled = 0;
+    state->rand_data_enabled = 0;
 
-    printf("Demo simulator initialized successfully as UART server on %s\n", g_uart_port.address);
-    printf("Waiting for commands...\n");
+    printf("DEMO SIM: Initialized successfully as %s\n", g_uart_port.name);
     return DEMO_SIM_SUCCESS;
 }
 
@@ -246,22 +271,10 @@ void demo_sim_cleanup(demo_sim_state_t* state)
     if (!state) return;
 
     g_state = NULL;  // Clear global state pointer
-    simulith_uart_close(&g_uart_port);
-
-    if (state->time_handle) 
-    {
-        simulith_time_cleanup(state->time_handle);
-        state->time_handle = NULL;
-    }
-    
-#ifdef STANDALONE_MODE
-    simulith_client_shutdown();
-#endif
+    simulith_transport_close((transport_port_t*)&g_uart_port);
 }
 
-// Component interface implementation (used when loaded as shared library)
-#ifndef STANDALONE_MODE
-
+// Component interface implementation
 static int demo_sim_component_init(component_state_t** state)
 {
     demo_sim_state_t* demo_state = malloc(sizeof(demo_sim_state_t));
@@ -307,11 +320,11 @@ static void demo_sim_component_cleanup(component_state_t* state)
 
 static const component_interface_t demo_sim_interface = {
     .name = "demo_sim",
-    .description = "Demo simulation component for testing",
+    .description = "Demo component simulation with UART interface",
     .init = demo_sim_component_init,
     .tick = demo_sim_component_tick,
     .cleanup = demo_sim_component_cleanup,
-    .configure = NULL  // Not implemented yet
+    .backdoor = demo_sim_backdoor
 };
 
 // Component registration function - exported for dynamic loading
@@ -326,34 +339,3 @@ const component_interface_t* get_component_interface(void)
 {
     return &demo_sim_interface;
 }
-
-#endif // !STANDALONE_MODE
-
-// Standalone mode main function
-#ifdef STANDALONE_MODE
-
-// Wrapper function for standalone mode (no 42 context available)
-static void demo_sim_standalone_tick(uint64_t tick_time_ns)
-{
-    demo_sim_on_tick(tick_time_ns, NULL); // Pass NULL for 42 context in standalone mode
-}
-
-int main(int argc, char* argv[])
-{
-    demo_sim_state_t state;
-    
-    if (demo_sim_init(&state) != DEMO_SIM_SUCCESS) 
-    {
-        printf("Failed to initialize demo simulator\n");
-        return 1;
-    }
-    
-    printf("Sample simulator running. Press Ctrl+C to exit.\n");
-    
-    // Run the client loop with our standalone tick callback
-    simulith_client_run_loop(demo_sim_standalone_tick);
-    
-    demo_sim_cleanup(&state);
-    return 0;
-}
-#endif // STANDALONE_MODE 

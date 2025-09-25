@@ -154,15 +154,9 @@ int32 DEMO_AppInit(void)
     ** Initialize application data
     ** Note that counters are excluded as they were reset in the previous code block
     */
-   DEMO_AppData.HkTelemetryPkt.DeviceErrorCount = 0;
-   DEMO_AppData.HkTelemetryPkt.DeviceCount      = 0;
-   DEMO_AppData.HkTelemetryPkt.DeviceEnabled    = DEMO_DEVICE_DISABLED;
-
-   /* 
-   ** Enable the device by default
-   ** This may not be applicable to all applications, but is included here as an example
-   */
-   DEMO_Enable();
+    DEMO_AppData.HkTelemetryPkt.DeviceErrorCount = 0;
+    DEMO_AppData.HkTelemetryPkt.DeviceCount      = 0;
+    DEMO_AppData.HkTelemetryPkt.DeviceEnabled    = DEMO_DEVICE_DISABLED;
 
     /*
      ** Send an information event that the app has initialized.
